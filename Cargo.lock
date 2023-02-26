@@ -1433,7 +1433,7 @@ dependencies = [
 [[package]]
 name = "ezkl"
 version = "0.1.0"
-source = "git+https://github.com/zkonduit/ezkl.git#898696167ad1f3ec85606d14ea38a3a867776fb4"
+source = "git+https://github.com/zkonduit/ezkl.git#1a0c92b8ea62358e45b57b9311358e17c9a4f516"
 dependencies = [
  "anyhow",
  "clap 4.1.6",
