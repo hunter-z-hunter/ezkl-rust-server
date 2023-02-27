@@ -13,7 +13,7 @@ pub enum RpcError {
 
 pub async fn run_server() -> Result<(SocketAddr, ServerHandle), RpcError> {
     let socket_addr =
-        std::env::var("PORT").unwrap_or("0.0.0.0:3030".to_owned());
+        std::env::var("PORT").unwrap();
 
     let server = ServerBuilder::default()
         .build(socket_addr.parse::<SocketAddr>().unwrap())
