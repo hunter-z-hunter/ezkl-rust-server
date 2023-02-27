@@ -12,11 +12,12 @@ pub enum RpcError {
 }
 
 pub async fn run_server() -> Result<(SocketAddr, ServerHandle), RpcError> {
-    let socket_addr =
-        std::env::var("PORT").unwrap();
+    // let socket_addr =
+    //     std::env::var("PORT").unwrap();
+    let socket_addr = format!("0.0.0.0:{}", std::env::var("PORT").unwrap()).parse::<SocketAddr>().unwrap();        
 
     let server = ServerBuilder::default()
-        .build(socket_addr.parse::<SocketAddr>().unwrap())
+        .build(socket_addr)
         .await?;
     let addr = server.local_addr()?;
     let rpc_calls = HunterZHunterRpc::new();
