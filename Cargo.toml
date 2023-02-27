@@ -12,5 +12,5 @@ eyre = "0.6.5"
 thiserror = "1.0.26"
 dotenv = "0.15.0"
 tokio = { version = "1.8.1", features = ["full"] }
-# ezkl = { git = "https://github.com/zkonduit/ezkl.git" }
+ezkl = { git = "https://github.com/zkonduit/ezkl.git" }
 
