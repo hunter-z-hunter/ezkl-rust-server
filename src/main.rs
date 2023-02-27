@@ -1,8 +1,7 @@
 use dotenv::dotenv;
 use eyre::Result;
+use log::{error, info};
 use rpc_server::run_server;
-use log::{error,info};
-
 
 #[tokio::main]
 async fn main() -> Result<()> {
