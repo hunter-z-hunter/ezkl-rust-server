@@ -1433,7 +1433,7 @@ dependencies = [
 [[package]]
 name = "ezkl"
 version = "0.1.0"
-source = "git+https://github.com/zkonduit/ezkl.git#e23d876e6ed627e6a9f7837603beed1d17be6ece"
+source = "git+https://github.com/zkonduit/ezkl.git#e941066b6d5f248088665fa9a223db1837ff6563"
 dependencies = [
  "anyhow",
  "clap 4.1.6",
@@ -3540,10 +3540,13 @@ dependencies = [
 name = "rpc-server"
 version = "0.1.0"
 dependencies = [
+ "colog",
  "dotenv",
  "eyre",
  "ezkl",
  "jsonrpsee",
+ "log",
+ "serde_json",
  "thiserror",
  "tokio",
 ]

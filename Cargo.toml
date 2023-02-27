@@ -13,4 +13,7 @@ thiserror = "1.0.26"
 dotenv = "0.15.0"
 tokio = { version = "1.8.1", features = ["full"] }
 ezkl = { git = "https://github.com/zkonduit/ezkl.git" }
+log = "0.4.14"
+colog = "1.1.0"
+serde_json = "1.0.64"
 

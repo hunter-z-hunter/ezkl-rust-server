@@ -9,12 +9,13 @@ use hunter_z_hunter_rpc::{HunterZHunterApiServer, HunterZHunterRpc};
 pub enum RpcError {
     #[error(transparent)]
     JsonRpcServerError(#[from] jsonrpsee::core::Error),
+    #[error(transparent)]
+    ParseError(#[from] AddrParseError),
 }
 
 pub async fn run_server() -> Result<(SocketAddr, ServerHandle), RpcError> {
-    // let socket_addr =
-    //     std::env::var("PORT").unwrap();
-    let socket_addr = format!("0.0.0.0:{}", std::env::var("PORT").unwrap()).parse::<SocketAddr>().unwrap();        
+
+    let socket_addr = format!("0.0.0.0:{}", std::env::var("PORT").unwrap_or("3030".to_owned())).parse::<SocketAddr>().unwrap();        
 
     let server = ServerBuilder::default()
         .build(socket_addr)
