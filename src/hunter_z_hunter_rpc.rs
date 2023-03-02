@@ -45,6 +45,8 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
         match res {
             Ok(_) => {
                 info!("mock success");
+                // find euclidian distance
+                euclidean_distance(input_data, ) // where do we find the target data?
                 Ok(true)
             }
             Err(e) => {
@@ -54,12 +56,17 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
         }
     }
 
-    async fn submit_proof(&self, cli: Cli, input_data: Value, target_output_data: Value) -> Result<()> {
+    async fn submit_proof(&self, cli: Cli, input_data: Value, target_data: Value) -> Result<()> {
         env::set_var("EZKLCONF", "./data/submit_proof.json");
         let input_data_str = serde_json::to_string(&input_data)?;
         store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
         run(cli).await.unwrap();
-        Ok(())
+        Ok(()) => {
+            info!("mock success");
+            // find euclidian distance
+            euclidean_distance(input_data, target_data); 
+            Ok(true)
+        }
     }
 }
 
@@ -93,10 +100,35 @@ fn retrieve_json_data(path: &str) -> std::io::Result<Value> {
     Ok(json_data)
 }
 
+// Finding the Euclidian distance between the two output tensors of our machine learning model
 fn euclidean_distance(a: &[f64], b: &[f64]) -> f64 {
-    let mut sum = 0.0;
-    for i in 0..a.len() {
-        sum += (a[i] - b[i]).powi(2);
-    }
-    sum.sqrt()
+    // check to make sure that a and b are the same length since the tensors should be the same
+    assert_eq!(a.len(), b.len(), "The lengths of a and b are {} and {}. They should be the same length.", a.len(), b.len());
+
+    a.iter()
+        .zip(b)
+        .map(|(&x, &y)| (x - y).powi(2))
+        .sum::<f64>()
+        .sqrt()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_euclidean_distance() {
+        let a = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+        let b = [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0];
+        assert_eq!(euclidean_distance(&a, &b), 18.16590212458495);
+    }
+
+    #[test]
+    #[should_panic(expected = "The lengths of a and b are 10 and 9. They should be the same length.")]
+    fn test_euclidean_distance_different_lengths() {
+        let a = [1.0, 2.0, 3.8, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 110.8];
+        let b = [10.0, 9.0, 84.0, 7.0, 6.4, 51.0, 4.0, 3.8, 2.0];
+        euclidean_distance(&a, &b);
+    }
+}
+
