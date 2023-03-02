@@ -41,17 +41,24 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
         env::set_var("EZKLCONF", "./data/mock.json");
         let input_data_str = serde_json::to_string(&input_data)?;
         store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
+        let output_data = input_data["output_data"].clone();
+        let target_output_data = target_output_data["target_output_data"].clone();
+        let output_data_vec: Vec<Vec<f64>> = serde_json::from_value(output_data).unwrap()?;
+        let target_output_data_vec: Vec<Vec<f64>> = serde_json::from_value(target_output_data).unwrap()?;
+        let distance = euclidean_distance(&output_data_vec[0], &target_output_data_vec[0]);
         let res = run(cli).await;
+        print!("res: {:?}", res);
         match res {
             Ok(_) => {
                 info!("mock success");
-                // find euclidian distance
-                euclidean_distance(input_data, ) // where do we find the target data?
-                Ok(true)
+                if distance < 0.1 {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
             }
             Err(e) => {
                 info!("mock failed");
-                Ok(false)
             }
         }
     }
@@ -101,7 +108,7 @@ fn retrieve_json_data(path: &str) -> std::io::Result<Value> {
 }
 
 // Finding the Euclidian distance between the two output tensors of our machine learning model
-fn euclidean_distance(a: &[f64], b: &[f64]) -> f64 {
+fn euclidean_distance(a: &Vec<f64>, b: &Vec<f64>) -> f64 {
     // check to make sure that a and b are the same length since the tensors should be the same
     assert_eq!(a.len(), b.len(), "The lengths of a and b are {} and {}. They should be the same length.", a.len(), b.len());
 
@@ -118,17 +125,18 @@ mod tests {
 
     #[test]
     fn test_euclidean_distance() {
-        let a = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-        let b = [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0];
+        let a: &Vec<f64> = &vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+        let b: &Vec<f64> = &vec![10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0];
         assert_eq!(euclidean_distance(&a, &b), 18.16590212458495);
     }
 
     #[test]
     #[should_panic(expected = "The lengths of a and b are 10 and 9. They should be the same length.")]
     fn test_euclidean_distance_different_lengths() {
-        let a = [1.0, 2.0, 3.8, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 110.8];
-        let b = [10.0, 9.0, 84.0, 7.0, 6.4, 51.0, 4.0, 3.8, 2.0];
+        let a: &Vec<f64> = &vec![1.0, 2.0, 3.8, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 110.8];
+        let b: &Vec<f64> = &vec![10.0, 9.0, 84.0, 7.0, 6.4, 51.0, 4.0, 3.8, 2.0];
         euclidean_distance(&a, &b);
     }
 }
+
 
