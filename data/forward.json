@@ -1,0 +1,1 @@
+{"command":{"Forward":{"data":"./data/4l_relu_conv_fc/input.json","model":"./data/4l_relu_conv_fc/network.onnx","output":"output.json"}},"args":{"tolerance":0,"scale":4,"bits":10,"logrows":12,"public_inputs":false,"public_outputs":true,"public_params":false,"max_rotations":512}}
