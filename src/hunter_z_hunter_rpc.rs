@@ -26,7 +26,7 @@ trait HunterZHunterApi {
     #[method(name = "mock")]
     async fn mock(&self, cli: Cli, input_data: Value) -> Result<bool>;
     #[method(name = "submit_proof")]
-    async fn submit_proof(&self, cli: Cli, input_data: Value) -> Result<()>;
+    async fn submit_proof(&self, cli: Cli, input_data: Value, target_data: Value) -> Result<()>;
 }
 
 #[async_trait]
@@ -40,7 +40,7 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
     async fn mock(&self, cli: Cli, input_data: Value) -> Result<bool> {
         env::set_var("EZKLCONF", "./data/mock.json");
         let input_data_str = serde_json::to_string(&input_data)?;
-        store_json_data(&input_data_str, "./data/1l_relu/input.json").unwrap();
+        store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
         let res = run(cli).await;
         match res {
             Ok(_) => {
@@ -54,10 +54,10 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
         }
     }
 
-    async fn submit_proof(&self, cli: Cli, input_data: Value) -> Result<()> {
+    async fn submit_proof(&self, cli: Cli, input_data: Value, target_data: Value) -> Result<()> {
         env::set_var("EZKLCONF", "./data/submit_proof.json");
         let input_data_str = serde_json::to_string(&input_data)?;
-        store_json_data(&input_data_str, "./data/1l_relu/input.json").unwrap();
+        store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
         run(cli).await.unwrap();
         Ok(())
     }
