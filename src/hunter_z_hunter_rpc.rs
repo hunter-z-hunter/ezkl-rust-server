@@ -71,7 +71,6 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
             },
             args: SERVER_ARGS,
         };
-
         let input_data_str = serde_json::to_string(&input_data)?;
         store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
         let output_data = input_data["output_data"].clone();
