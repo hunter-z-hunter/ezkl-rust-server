@@ -21,23 +21,26 @@ pub struct HunterZHunterRpc {}
 
 #[rpc(server, client)]
 trait HunterZHunterApi {
-    #[method(name = "call_run")]
-    async fn call_run(&self, cli: Cli) -> Result<()>;
+    #[method(name = "forward")]
+    async fn forward(&self, cli: Cli, input_data: Value) -> Result<Value>;
     #[method(name = "mock")]
-    async fn mock(&self, cli: Cli, input_data: Value) -> Result<bool>;
+    async fn mock(&self, cli: Cli, input_data: Value, target_output_data: Value) -> Result<bool>;
     #[method(name = "submit_proof")]
     async fn submit_proof(&self, cli: Cli, input_data: Value, target_data: Value) -> Result<()>;
 }
 
 #[async_trait]
 impl HunterZHunterApiServer for HunterZHunterRpc {
-    async fn call_run(&self, cli: Cli) -> Result<()> {
-        env::set_var("EZKLCONF", "data");
+    async fn forward(&self, cli: Cli, input_data: Value) -> Result<Value> {
+        env::set_var("EZKLCONF", "./data/forward.json");
+        let input_data_str = serde_json::to_string(&input_data)?;
+        store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
         run(cli).await.unwrap();
-        Ok(())
+        let output = retrieve_json_data("output.json").unwrap();
+        Ok(output)
     }
 
-    async fn mock(&self, cli: Cli, input_data: Value) -> Result<bool> {
+    async fn mock(&self, cli: Cli, input_data: Value, target_output_data: Value) -> Result<bool> {
         env::set_var("EZKLCONF", "./data/mock.json");
         let input_data_str = serde_json::to_string(&input_data)?;
         store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
@@ -54,7 +57,12 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
         }
     }
 
-    async fn submit_proof(&self, cli: Cli, input_data: Value, target_output_data: Value) -> Result<()> {
+    async fn submit_proof(
+        &self,
+        cli: Cli,
+        input_data: Value,
+        target_output_data: Value,
+    ) -> Result<()> {
         env::set_var("EZKLCONF", "./data/submit_proof.json");
         let input_data_str = serde_json::to_string(&input_data)?;
         store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
