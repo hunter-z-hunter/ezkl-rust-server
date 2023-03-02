@@ -65,7 +65,7 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
     }
 
     async fn mock(&self, input_data: Value, target_output_data: Value) -> Result<bool> {
-
+        env::set_var("EZKLCONF", "./data/mock.json");
         let cli = Cli {
             command: Commands::Mock {
                 data: "./data/4l_relu_conv_fc/input.json".to_string(),
@@ -75,8 +75,6 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
         };
         let input_data_str = serde_json::to_string(&input_data)?;
         store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
-        store_json_data(&input_data_str, "./data/mock.json").unwrap();
-        env::set_var("EZKLCONF", "./data/mock.json");
         let output_data = input_data["output_data"].clone();
         let target_output_data = target_output_data["target_output_data"].clone();
         let output_data_vec: Vec<Vec<f64>> = serde_json::from_value(output_data).unwrap();
