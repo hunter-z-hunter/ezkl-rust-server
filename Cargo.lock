@@ -3542,6 +3542,7 @@ version = "0.1.0"
 dependencies = [
  "colog",
  "dotenv",
+ "ethers",
  "eyre",
  "ezkl",
  "halo2_proofs",
