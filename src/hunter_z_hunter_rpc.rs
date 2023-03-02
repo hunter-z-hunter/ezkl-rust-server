@@ -14,8 +14,8 @@ use ezkl::{
 };
 use halo2_proofs::{dev::MockProver, poly::commitment::ParamsProver};
 use serde_json::Value;
-use std::{env, error::Error, fs::File};
 use std::io::prelude::*;
+use std::{env, error::Error, fs::File};
 
 pub struct HunterZHunterRpc {}
 
@@ -24,9 +24,9 @@ trait HunterZHunterApi {
     #[method(name = "call_run")]
     async fn call_run(&self, cli: Cli) -> Result<()>;
     #[method(name = "mock")]
-    async fn mock(&self, cli: Cli , input_data : Value) -> Result<bool>;
+    async fn mock(&self, cli: Cli, input_data: Value) -> Result<bool>;
     #[method(name = "submit_proof")]
-    async fn submit_proof(&self, cli: Cli , input_data : Value) -> Result<()>;
+    async fn submit_proof(&self, cli: Cli, input_data: Value) -> Result<()>;
 }
 
 #[async_trait]
@@ -37,7 +37,7 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
         Ok(())
     }
 
-    async fn mock(&self, cli: Cli , input_data: Value) -> Result<bool> {
+    async fn mock(&self, cli: Cli, input_data: Value) -> Result<bool> {
         env::set_var("EZKLCONF", "./data/mock.json");
         let input_data_str = serde_json::to_string(&input_data)?;
         store_json_data(&input_data_str, "./data/1l_relu/input.json").unwrap();
@@ -51,9 +51,7 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
                 info!("mock failed");
                 Ok(false)
             }
-            
         }
-     
     }
 
     async fn submit_proof(&self, cli: Cli, input_data: Value) -> Result<()> {
@@ -71,9 +69,7 @@ impl HunterZHunterRpc {
     }
 }
 
-
-fn store_json_data(json_str:&str, path: &str) -> std::io::Result<()>{
-
+fn store_json_data(json_str: &str, path: &str) -> std::io::Result<()> {
     // Open the file for writing
     let mut file = File::create(path)?;
 
@@ -84,7 +80,6 @@ fn store_json_data(json_str:&str, path: &str) -> std::io::Result<()>{
 }
 
 fn retrieve_json_data(path: &str) -> std::io::Result<Value> {
-
     // Open the file for reading
     let mut file = File::open(path)?;
 
