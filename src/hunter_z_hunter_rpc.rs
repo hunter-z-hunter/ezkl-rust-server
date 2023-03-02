@@ -40,15 +40,26 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
     async fn mock(&self, cli: Cli , input_data: Value) -> Result<bool> {
         env::set_var("EZKLCONF", "./data/mock.json");
         let input_data_str = serde_json::to_string(&input_data)?;
-        store_json_data(&input_data_str, "./data/1l_relu/input2.json").unwrap();
-        run(cli).await.unwrap();
-        Ok(true)
+        store_json_data(&input_data_str, "./data/1l_relu/input.json").unwrap();
+        let res = run(cli).await;
+        match res {
+            Ok(_) => {
+                info!("mock success");
+                Ok(true)
+            }
+            Err(e) => {
+                info!("mock failed");
+                Ok(false)
+            }
+            
+        }
+     
     }
 
     async fn submit_proof(&self, cli: Cli, input_data: Value) -> Result<()> {
         env::set_var("EZKLCONF", "./data/submit_proof.json");
         let input_data_str = serde_json::to_string(&input_data)?;
-        store_json_data(&input_data_str, "./data/1l_relu/input2.json").unwrap();
+        store_json_data(&input_data_str, "./data/1l_relu/input.json").unwrap();
         run(cli).await.unwrap();
         Ok(())
     }
@@ -62,8 +73,6 @@ impl HunterZHunterRpc {
 
 
 fn store_json_data(json_str:&str, path: &str) -> std::io::Result<()>{
-    // Parse the JSON string into a JSOn object
-    let json_data: Value = serde_json::from_str(json_str)?;
 
     // Open the file for writing
     let mut file = File::create(path)?;

@@ -1,1 +1,1 @@
-{"command":{"Mock":{"data":"./data/1l_relu/input2.json","model":"./data/1l_relu/network.onnx"}},"args":{"tolerance":0,"scale":4,"bits":10,"logrows":12,"public_inputs":false,"public_outputs":true,"public_params":false,"max_rotations":512}}
+{"command":{"Mock":{"data":"./data/4l_relu_conv_fc/input.json","model":"./data/4l_relu_conv_fc/network.onnx"}},"args":{"tolerance":0,"scale":4,"bits":10,"logrows":12,"public_inputs":false,"public_outputs":true,"public_params":false,"max_rotations":512}}
