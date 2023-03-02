@@ -54,7 +54,7 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
         }
     }
 
-    async fn submit_proof(&self, cli: Cli, input_data: Value, target_data: Value) -> Result<()> {
+    async fn submit_proof(&self, cli: Cli, input_data: Value, target_output_data: Value) -> Result<()> {
         env::set_var("EZKLCONF", "./data/submit_proof.json");
         let input_data_str = serde_json::to_string(&input_data)?;
         store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
