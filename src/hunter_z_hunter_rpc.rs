@@ -67,11 +67,19 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
         env::set_var("EZKLCONF", "./data/submit_proof.json");
         let input_data_str = serde_json::to_string(&input_data)?;
         store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
+        let output_data = input_data["output_data"].clone();
+        let target_output_data = target_output_data["target_output_data"].clone();
+        let output_data_vec: Vec<Vec<f64>> = serde_json::from_value(output_data).unwrap()?;
+        let target_output_data_vec: Vec<Vec<f64>> = serde_json::from_value(target_output_data).unwrap()?;
+        let distance = euclidean_distance(&output_data_vec[0], &target_output_data_vec[0]);
         run(cli).await.unwrap();
         Ok(()) => {
             info!("mock success");
-            // find euclidian distance
-            euclidean_distance(input_data, target_data); 
+            if distance < 0.1 {
+                Ok(true)
+            } else {
+                Ok(false)
+            }
             Ok(true)
         }
     }
