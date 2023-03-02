@@ -6,32 +6,53 @@ use jsonrpsee::{
     tracing::info,
 };
 
-use ezkl::execute::run;
 use ezkl::{
     commands::{Cli, Commands},
     execute::ExecutionError,
     pfsys::{prepare_data, prepare_model_circuit_and_public_input},
 };
+use ezkl::{
+    commands::{RunArgs, StrategyType, TranscriptType},
+    execute::run,
+};
 use halo2_proofs::{dev::MockProver, poly::commitment::ParamsProver};
 use serde_json::Value;
-use std::io::prelude::*;
 use std::{env, error::Error, fs::File};
+use std::{io::prelude::*, path::PathBuf};
 
 pub struct HunterZHunterRpc {}
 
+const SERVER_ARGS: RunArgs = RunArgs {
+    tolerance: 0_usize,
+    scale: 4_i32,
+    bits: 10_usize,
+    logrows: 12_u32,
+    public_inputs: false,
+    public_outputs: true,
+    public_params: false,
+    max_rotations: 512_usize,
+};
 #[rpc(server, client)]
 trait HunterZHunterApi {
     #[method(name = "forward")]
-    async fn forward(&self, cli: Cli, input_data: Value) -> Result<Value>;
+    async fn forward(&self, input_data: Value) -> Result<Value>;
     #[method(name = "mock")]
-    async fn mock(&self, cli: Cli, input_data: Value, target_output_data: Value) -> Result<bool>;
+    async fn mock(&self, input_data: Value, target_output_data: Value) -> Result<bool>;
     #[method(name = "submit_proof")]
-    async fn submit_proof(&self, cli: Cli, input_data: Value, target_data: Value) -> Result<()>;
+    async fn submit_proof(&self, input_data: Value, target_data: Value) -> Result<()>;
 }
 
 #[async_trait]
 impl HunterZHunterApiServer for HunterZHunterRpc {
-    async fn forward(&self, cli: Cli, input_data: Value) -> Result<Value> {
+    async fn forward(&self, input_data: Value) -> Result<Value> {
+        let cli = Cli {
+            command: Commands::Forward {
+                data: "./data/4l_relu_conv_fc/input.json".to_string(),
+                model: "./data/4l_relu_conv_fc/network.onnx".to_string(),
+                output: "output.json".to_string(),
+            },
+            args: SERVER_ARGS,
+        };
         env::set_var("EZKLCONF", "./data/forward.json");
         let input_data_str = serde_json::to_string(&input_data)?;
         store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
@@ -40,8 +61,17 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
         Ok(output)
     }
 
-    async fn mock(&self, cli: Cli, input_data: Value, target_output_data: Value) -> Result<bool> {
+    async fn mock(&self, input_data: Value, target_output_data: Value) -> Result<bool> {
         env::set_var("EZKLCONF", "./data/mock.json");
+
+        let cli = Cli {
+            command: Commands::Mock {
+                data: "./data/4l_relu_conv_fc/input.json".to_string(),
+                model: "./data/4l_relu_conv_fc/network.onnx".to_string(),
+            },
+            args: SERVER_ARGS,
+        };
+
         let input_data_str = serde_json::to_string(&input_data)?;
         store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
         let res = run(cli).await;
@@ -59,14 +89,26 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
 
     async fn submit_proof(
         &self,
-        cli: Cli,
         input_data: Value,
         target_output_data: Value,
     ) -> Result<()> {
         env::set_var("EZKLCONF", "./data/submit_proof.json");
+        let cli2 = Cli {
+            command: Commands::Prove {
+                data: "./data/4l_relu_conv_fc/input.json".to_string(),
+                model: PathBuf::from("./data/4l_relu_conv_fc/network.onnx"),
+                vk_path: PathBuf::from("4l_relu_conv_fc.vk"),
+                proof_path: PathBuf::from("4l_relu_conv_fc.vk"),
+                params_path: PathBuf::from("kzg.params"),
+                transcript: TranscriptType::EVM,
+                strategy: StrategyType::Single,
+            },
+            args: SERVER_ARGS,
+        };
         let input_data_str = serde_json::to_string(&input_data)?;
         store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
-        run(cli).await.unwrap();
+        //TODO: Prepare data.pf file -> Run Verify AGGR EVM -> Send Tx
+        run(cli2).await.unwrap();
         Ok(())
     }
 }
@@ -101,7 +143,7 @@ fn retrieve_json_data(path: &str) -> std::io::Result<Value> {
     Ok(json_data)
 }
 
-fn euclidean_distance(a: &[f64], b: &[f64]) -> f64 {
+fn euclidean_distance(a: &Vec<f64>, b: &Vec<f64>) -> f64 {
     let mut sum = 0.0;
     for i in 0..a.len() {
         sum += (a[i] - b[i]).powi(2);
