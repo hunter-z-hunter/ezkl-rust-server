@@ -1433,7 +1433,7 @@ dependencies = [
 [[package]]
 name = "ezkl"
 version = "0.1.0"
-source = "git+https://github.com/zkonduit/ezkl.git#4a444b249396b6a09e4c323143f6daf1b71b4c92"
+source = "git+https://github.com/danilowhk/ezkl.git#7f06120ecc9abd2537a7f94ec83d50d2503be015"
 dependencies = [
  "anyhow",
  "clap 4.1.6",
@@ -3544,6 +3544,8 @@ dependencies = [
  "dotenv",
  "eyre",
  "ezkl",
+ "halo2_proofs",
+ "halo2curves 0.3.1",
  "jsonrpsee",
  "log",
  "serde_json",

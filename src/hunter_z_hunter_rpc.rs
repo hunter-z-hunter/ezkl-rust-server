@@ -1,3 +1,4 @@
+use halo2curves::bn256::Fr;
 /// The RPC module for the Ethereum protocol required by Kakarot.
 use jsonrpsee::{
     core::{async_trait, RpcResult as Result, __reexports::serde_json},
@@ -5,9 +6,16 @@ use jsonrpsee::{
     tracing::info,
 };
 
-use ezkl::commands::{Cli};
 use ezkl::execute::run;
-use std::env;
+use ezkl::{
+    commands::{Cli, Commands},
+    execute::ExecutionError,
+    pfsys::{prepare_data, prepare_model_circuit_and_public_input},
+};
+use halo2_proofs::{dev::MockProver, poly::commitment::ParamsProver};
+use serde_json::Value;
+use std::{env, error::Error, fs::File};
+use std::io::prelude::*;
 
 pub struct HunterZHunterRpc {}
 
@@ -16,31 +24,34 @@ trait HunterZHunterApi {
     #[method(name = "call_run")]
     async fn call_run(&self, cli: Cli) -> Result<()>;
     #[method(name = "mock")]
-    async fn mock(&self, cli: Cli) -> Result<bool>;
+    async fn mock(&self, cli: Cli , input_data : Value) -> Result<bool>;
     #[method(name = "submit_proof")]
-    async fn submit_proof(&self, cli: Cli) -> Result<()>;
+    async fn submit_proof(&self, cli: Cli , input_data : Value) -> Result<()>;
 }
 
 #[async_trait]
 impl HunterZHunterApiServer for HunterZHunterRpc {
-
-    async fn call_run(&self, cli: Cli) -> Result<()>{
+    async fn call_run(&self, cli: Cli) -> Result<()> {
         env::set_var("EZKLCONF", "data");
         run(cli).await.unwrap();
         Ok(())
     }
 
-    async fn mock(&self, config: Cli) -> Result<bool> {
+    async fn mock(&self, cli: Cli , input_data: Value) -> Result<bool> {
         env::set_var("EZKLCONF", "./data/mock.json");
-        run(config).await.unwrap();
+        let input_data_str = serde_json::to_string(&input_data)?;
+        store_json_data(&input_data_str, "./data/1l_relu/input2.json").unwrap();
+        run(cli).await.unwrap();
         Ok(true)
     }
 
-    async fn submit_proof(&self, config: Cli) -> Result<()> {
+    async fn submit_proof(&self, cli: Cli, input_data: Value) -> Result<()> {
         env::set_var("EZKLCONF", "./data/submit_proof.json");
-        run(config).await.unwrap();
+        let input_data_str = serde_json::to_string(&input_data)?;
+        store_json_data(&input_data_str, "./data/1l_relu/input2.json").unwrap();
+        run(cli).await.unwrap();
         Ok(())
-    }    
+    }
 }
 
 impl HunterZHunterRpc {
@@ -50,3 +61,38 @@ impl HunterZHunterRpc {
 }
 
 
+fn store_json_data(json_str:&str, path: &str) -> std::io::Result<()>{
+    // Parse the JSON string into a JSOn object
+    let json_data: Value = serde_json::from_str(json_str)?;
+
+    // Open the file for writing
+    let mut file = File::create(path)?;
+
+    // Write the Json data to the file
+    file.write_all(json_str.as_bytes())?;
+
+    Ok(())
+}
+
+fn retrieve_json_data(path: &str) -> std::io::Result<Value> {
+
+    // Open the file for reading
+    let mut file = File::open(path)?;
+
+    // Read the file contents into a string
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+
+    // Parse the JSON string into a JSON object
+    let json_data: Value = serde_json::from_str(&contents)?;
+
+    Ok(json_data)
+}
+
+fn euclidean_distance(a: &[f64], b: &[f64]) -> f64 {
+    let mut sum = 0.0;
+    for i in 0..a.len() {
+        sum += (a[i] - b[i]).powi(2);
+    }
+    sum.sqrt()
+}
