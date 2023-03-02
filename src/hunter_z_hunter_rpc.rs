@@ -15,6 +15,7 @@ use ezkl::{
 use halo2_proofs::{dev::MockProver, poly::commitment::ParamsProver};
 use serde_json::Value;
 use std::io::prelude::*;
+use core::panic;
 use std::{env, error::Error, fs::File};
 
 pub struct HunterZHunterRpc {}
@@ -26,7 +27,10 @@ trait HunterZHunterApi {
     #[method(name = "mock")]
     async fn mock(&self, cli: Cli, input_data: Value) -> Result<bool>;
     #[method(name = "submit_proof")]
-    async fn submit_proof(&self, cli: Cli, input_data: Value, target_data: Value) -> Result<()>;
+
+    async fn submit_proof(&self, input_data: Value, target_output_data: Value) -> Result<bool>;
+    #[method(name = "verify_aggr_proof")]
+    async fn verify_aggr_proof(&self, input_data: Value, target_output_data: Value) -> Result<bool>;    
 }
 
 #[async_trait]
@@ -39,6 +43,14 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
 
     async fn mock(&self, cli: Cli, input_data: Value) -> Result<bool> {
         env::set_var("EZKLCONF", "./data/mock.json");
+
+        let cli = Cli {
+            command: Commands::Mock {
+                data: "./data/4l_relu_conv_fc/input.json".to_string(),
+                model: "./data/4l_relu_conv_fc/network.onnx".to_string(),
+            },
+            args: SERVER_ARGS,
+        };
         let input_data_str = serde_json::to_string(&input_data)?;
         store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
         let output_data = input_data["output_data"].clone();
@@ -79,15 +91,54 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
         let result = hunter_caller::main(params).unwrap();
         println!("contract logs: {:?}", result);
         
-        run(cli).await.unwrap();
-        Ok(()) => {
-            info!("mock success");
-            if distance < 0.1 {
-                // use Ethers.rs to trigger payment
-                
-                triggerPayment();
-                Ok(true)
-            } else {
+
+        let res = run(cli).await;
+        print!("res: {:?}", res);
+        match res {
+            Ok(_) => {
+                info!("mock success");
+                if distance < 0.1 {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Err(e) => {
+                panic!("mock failed");
+            }
+        }
+    }
+
+    async fn verify_aggr_proof(&self, input_data: Value, target_output_data: Value) -> Result<bool>{
+        env::set_var("EZKLCONF", "./data/submit_proof.json");
+        let cli = Cli {
+            command: Commands::VerifyAggr {  
+                proof_path: PathBuf::from("aggr_2l.pf"),
+                vk_path: PathBuf::from("aggr_2l.vk"),
+                params_path: PathBuf::from("kzg.params"),
+                transcript: TranscriptType::EVM},
+            args: SERVER_ARGS,
+        };
+        let input_data_str = serde_json::to_string(&input_data)?;
+        store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
+        let output_data = input_data["output_data"].clone();
+        let target_output_data = target_output_data["target_output_data"].clone();
+        let output_data_vec: Vec<Vec<f64>> = serde_json::from_value(output_data).unwrap();
+        let target_output_data_vec: Vec<Vec<f64>> =
+            serde_json::from_value(target_output_data).unwrap();
+        let distance = euclidean_distance(&output_data_vec[0], &target_output_data_vec[0]);
+        let res = run(cli).await;
+        match res {
+            Ok(_) => {
+                info!("Verify success");
+                if distance < 0.1 {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Err(e) => {
+                info!("Verify failed");
                 Ok(false)
             }
             Ok(true)
