@@ -269,5 +269,9 @@ mod tests {
     }
 
     #[test]
-    
+    #[should_panic(expected = "the call failed")]
+    fn test_request() {
+        let result = request::postData().await;
+        assert_eq!(result, true);
+    }
 }
