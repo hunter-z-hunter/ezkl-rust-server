@@ -20,6 +20,7 @@ use halo2_proofs::{dev::MockProver, poly::commitment::ParamsProver};
 use serde_json::Value;
 use std::{env, error::Error, fs::File};
 use std::{io::prelude::*, path::PathBuf};
+use hunter_z_hunter_rpc::request::PostData;
 
 pub struct HunterZHunterRpc {}
 
@@ -121,11 +122,7 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
         let target_output_data_vec: Vec<Vec<f64>> = serde_json::from_value(target_output_data)?;
         let distance = euclidean_distance(&output_data_vec[0], &target_output_data_vec[0]);
 
-        // define params for Ethers rust call
-        // We pass in the huntID, the address of the winner, and the proof here.
-        // let params = VerifyAwardParams::new();
-        // let result = hunter_caller::main(params).unwrap();
-        // println!("contract logs: {:?}", result);
+        // trigger payment
 
         let res = run(cli).await;
         print!("res: {:?}", res);
@@ -171,6 +168,8 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
                 info!("Verify success");
                 if distance < 0.1 {
                     Ok(true)
+                    // call the payment function
+
                 } else {
                     Ok(false)
                 }
@@ -231,7 +230,17 @@ fn euclidean_distance(a: &Vec<f64>, b: &Vec<f64>) -> f64 {
         .sqrt()
 }
 
+pub fn passOutputData(output: &Value) -> Value {
+    // call request and create a new hunt struct instance.
+    // when we add hunt_id to the call, we'll pass it here as well
+}
+
 fn triggerPayment() -> bool {
+        // define params for Ethers rust call
+        // We pass in the huntID, the address of the winner, and the proof here.
+        // let params = VerifyAwardParams::new();
+        // let result = hunter_caller::main(params).unwrap();
+        // println!("contract logs: {:?}", result);
     true
 }
 
