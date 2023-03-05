@@ -18,10 +18,15 @@ use ezkl::{
 };
 use halo2_proofs::{dev::MockProver, poly::commitment::ParamsProver};
 use serde_json::Value;
-use std::{env, error::Error, fs::File};
+use std::{env, error::Error, fs::File, sync::Arc};
 use std::{io::prelude::*, path::PathBuf};
+// use request::PostData;
 
+// use crate::request::PostData;
+use crate::request::request;
 pub struct HunterZHunterRpc {}
+
+// pub trait HunterZHunterApiS
 
 #[rpc(server, client)]
 trait HunterZHunterApi {
@@ -31,10 +36,12 @@ trait HunterZHunterApi {
     async fn mock(&self, input_data: Value, target_output_data: Value) -> Result<bool>;
     #[method(name = "submit_proof")]
 
-    async fn submit_proof(&self, input_data: Value, target_output_data: Value) -> Result<bool>;
+    async fn submit_proof(&self, input_data: Value, target_output_data: Value, hunt_id: String) -> Result<bool>;
     #[method(name = "verify_aggr_proof")]
     async fn verify_aggr_proof(&self, input_data: Value, target_output_data: Value)
         -> Result<bool>;
+    #[method(name = "dummy_proof")]
+    async fn dummy_proof(&self) -> bool;
 }
 
 const SERVER_ARGS: RunArgs = RunArgs {
@@ -48,8 +55,7 @@ const SERVER_ARGS: RunArgs = RunArgs {
     max_rotations: 512_usize,
 };
 
-#[async_trait]
-impl HunterZHunterApiServer for HunterZHunterRpc {
+impl HunterZHunterRpc {
     async fn forward(&self, input_data: Value) -> Result<Value> {
         let cli = Cli {
             command: Commands::Forward {
@@ -67,7 +73,7 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
         Ok(output)
     }
 
-    async fn mock(&self, input_data: Value, target_output_data: Value) -> Result<bool> {
+    async fn mock(&self, input_data: Value, target_output_data: Value, hunt_id: String) -> (Result<bool>) {
         env::set_var("EZKLCONF", "./data/mock.json");
 
         let cli = Cli {
@@ -90,6 +96,7 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
             Ok(_) => {
                 info!("mock success");
                 if distance < 0.1 {
+                    self.submit_proof(input_data, target_output_data, hunt_id).await?;
                     Ok(true)
                 } else {
                     Ok(false)
@@ -99,13 +106,13 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
         }
     }
 
-    async fn submit_proof(&self, input_data: Value, target_output_data: Value) -> Result<bool> {
+    async fn submit_proof(&self, input_data: Value, target_output_data: Value, hunt_id: String) -> (Result<bool>, String) {
         let cli = Cli {
             command: Commands::Prove {
                 data: "./data/4l_relu_conv_fc/input.json".to_string(),
                 model: PathBuf::from("./data/4l_relu_conv_fc/network.onnx"),
                 vk_path: PathBuf::from("4l_relu_conv_fc.vk"),
-                proof_path: PathBuf::from("4l_relu_conv_fc.vk"),
+                proof_path: PathBuf::from("4l_relu_conv_fc.pf"),
                 params_path: PathBuf::from("kzg.params"),
                 transcript: TranscriptType::EVM,
                 strategy: StrategyType::Single,
@@ -120,12 +127,6 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
         let output_data_vec: Vec<Vec<f64>> = serde_json::from_value(output_data)?;
         let target_output_data_vec: Vec<Vec<f64>> = serde_json::from_value(target_output_data)?;
         let distance = euclidean_distance(&output_data_vec[0], &target_output_data_vec[0]);
-
-        // define params for Ethers rust call
-        // We pass in the huntID, the address of the winner, and the proof here.
-        // let params = VerifyAwardParams::new();
-        // let result = hunter_caller::main(params).unwrap();
-        // println!("contract logs: {:?}", result);
 
         let res = run(cli).await;
         print!("res: {:?}", res);
@@ -181,6 +182,12 @@ impl HunterZHunterApiServer for HunterZHunterRpc {
             }
         }
     }
+    pub async fn dummy_proof(&self) -> Result<bool> {
+        // call request and create a new hunt struct instance.
+        let result: bool = request::postData().await;
+        Ok(result)
+        // when we add hunt_id to the call, we'll pass it here as well
+    }
 }
 
 impl HunterZHunterRpc {
@@ -232,6 +239,11 @@ fn euclidean_distance(a: &Vec<f64>, b: &Vec<f64>) -> f64 {
 }
 
 fn triggerPayment() -> bool {
+        // define params for Ethers rust call
+        // We pass in the huntID, the address of the winner, and the proof here.
+        // let params = VerifyAwardParams::new();
+        // let result = hunter_caller::main(params).unwrap();
+        // println!("contract logs: {:?}", result);
     true
 }
 
@@ -255,4 +267,7 @@ mod tests {
         let b: &Vec<f64> = &vec![10.0, 9.0, 84.0, 7.0, 6.4, 51.0, 4.0, 3.8, 2.0];
         euclidean_distance(&a, &b);
     }
+
+    #[test]
+    
 }
