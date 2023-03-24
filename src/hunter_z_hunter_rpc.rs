@@ -24,6 +24,7 @@ use std::{io::prelude::*, path::PathBuf};
 
 // use crate::request::PostData;
 use crate::request::request;
+use hunter_caller::VerifyandAwardParams;
 pub struct HunterZHunterRpc {}
 
 // pub trait HunterZHunterApiS
@@ -40,8 +41,8 @@ trait HunterZHunterApi {
     #[method(name = "verify_aggr_proof")]
     async fn verify_aggr_proof(&self, input_data: Value, target_output_data: Value)
         -> Result<bool>;
-    #[method(name = "dummy_proof")]
-    async fn dummy_proof(&self) -> bool;
+    // #[method(name = "dummy_proof")]
+    // async fn dummy_proof(&self) -> Result<bool>;
 }
 
 const SERVER_ARGS: RunArgs = RunArgs {
@@ -73,7 +74,7 @@ impl HunterZHunterRpc {
         Ok(output)
     }
 
-    async fn mock(&self, input_data: Value, target_output_data: Value, hunt_id: String) -> (Result<bool>) {
+    async fn mock(&self, input_data: Value, target_output_data: Value, hunt_id: String, hunter_address: String) -> (Result<bool>) {
         env::set_var("EZKLCONF", "./data/mock.json");
 
         let cli = Cli {
@@ -96,8 +97,11 @@ impl HunterZHunterRpc {
             Ok(_) => {
                 info!("mock success");
                 if distance < 0.1 {
-                    self.submit_proof(input_data, target_output_data, hunt_id).await?;
                     Ok(true)
+                    // call verifyAndAwardPrize function here
+                    let proof = retrieve_json_data("4l_relu_conv_fc.pf")?;
+                    let params = VerifyandAwardParams::new(hunt_id, hunter_address, proof);
+                    main(params).await?;
                 } else {
                     Ok(false)
                 }
@@ -122,12 +126,15 @@ impl HunterZHunterRpc {
         env::set_var("EZKLCONF", "./data/submit_proof.json");
         let input_data_str = serde_json::to_string(&input_data)?;
         store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json")?;
+        // clone output data and target data
         let output_data = input_data["output_data"].clone();
         let target_output_data = target_output_data["target_output_data"].clone();
+        // convert them to vectors
         let output_data_vec: Vec<Vec<f64>> = serde_json::from_value(output_data)?;
         let target_output_data_vec: Vec<Vec<f64>> = serde_json::from_value(target_output_data)?;
+        // calculate euclidiean distance
         let distance = euclidean_distance(&output_data_vec[0], &target_output_data_vec[0]);
-
+        // determine if they've found the item or not; if so, reward them on-chain
         let res = run(cli).await;
         print!("res: {:?}", res);
         match res {
@@ -135,6 +142,10 @@ impl HunterZHunterRpc {
                 info!("mock success");
                 if distance < 0.1 {
                     Ok(true)
+                    // call verifyAndAwardPrize function here
+                    let proof = retrieve_json_data("4l_relu_conv_fc.pf")?;
+                    let params = VerifyandAwardParams::new(hunt_id, hunter_address, proof);
+                    main(params).await?;
                 } else {
                     Ok(false)
                 }
@@ -182,12 +193,12 @@ impl HunterZHunterRpc {
             }
         }
     }
-    pub async fn dummy_proof(&self) -> Result<bool> {
-        // call request and create a new hunt struct instance.
-        let result: bool = request::postData().await;
-        Ok(result)
-        // when we add hunt_id to the call, we'll pass it here as well
-    }
+    // pub async fn dummy_proof(&self) -> Result<bool> {
+    //     // call request and create a new hunt struct instance.
+    //     let result: bool = request::postData().await;
+    //     Ok(result)
+    //     // when we add hunt_id to the call, we'll pass it here as well
+    // }
 }
 
 impl HunterZHunterRpc {
@@ -269,5 +280,28 @@ mod tests {
     }
 
     #[test]
-    
+    #[should_panic(expected = "the call failed")]
+    fn test_request() {
+        let result = request::postData().await;
+        assert_eq!(result, true);
+    }
+
+    #[tokio::test]
+    async fn test_verify_and_award() {
+        let input_data = json!({
+            "output_data": [...] // Some sample output_data
+        });
+        let target_output_data = json!({
+            "target_output_data": [...] // Some sample target_output_data
+        });
+        let hunt_id = String::from("sample-hunt-id");
+        let obj = ...; // Create an instance of the struct that implements the `mock` function
+
+        let result = obj.mock(input_data, target_output_data, hunt_id).await;
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), true); // Change this to `false` if you expect the test to fail
+    }
+}
+
 }
