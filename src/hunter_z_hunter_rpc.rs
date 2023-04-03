@@ -1,7 +1,5 @@
-use halo2curves::bn256::Fr;
-/// The RPC module for the Ethereum protocol required by Kakarot.
 use jsonrpsee::{
-    core::{async_trait, RpcResult as Result, __reexports::serde_json},
+    core::{RpcResult as Result, __reexports::serde_json},
     proc_macros::rpc,
     tracing::info,
 };
@@ -9,26 +7,20 @@ use jsonrpsee::{
 use core::panic;
 use ezkl::{
     commands::{Cli, Commands},
-    execute::ExecutionError,
-    pfsys::{prepare_data, prepare_model_circuit_and_public_input},
 };
 use ezkl::{
     commands::{RunArgs, StrategyType, TranscriptType},
     execute::run,
 };
-use halo2_proofs::{dev::MockProver, poly::commitment::ParamsProver};
 use serde_json::Value;
-use std::{env, error::Error, fs::File, sync::Arc};
+use std::{env, fs::File};
 use std::{io::prelude::*, path::PathBuf};
-use blockchain::hunter_caller::VerifyAndAwardParams;
-
+use crate::blockchain::hunter_caller::{VerifyandAwardParams, main};
 // use request::PostData;
 
 // use crate::request::PostData;
 use crate::request::request;
 pub struct HunterZHunterRpc {}
-use blockchain::hunter_caller::VerifyAndAwardParams;
-
 // pub trait HunterZHunterApiS
 #[rpc(server, client)]
 trait HunterZHunterApi {
@@ -75,7 +67,7 @@ impl HunterZHunterRpc {
         Ok(output)
     }
 
-    async fn mock(&self, input_data: Value, target_output_data: Value, hunt_id: String, hunter_address: String) -> (Result<bool>) {
+    async fn mock(&self, input_data: Value, target_output_data: Value, hunt_id: String, hunter_address: String) -> Result<bool> {
         env::set_var("EZKLCONF", "./data/mock.json");
 
         let cli = Cli {
@@ -101,7 +93,7 @@ impl HunterZHunterRpc {
                     // call verifyAndAwardPrize function here
                     let proof = retrieve_json_data("4l_relu_conv_fc.pf")?;
                     let params = VerifyandAwardParams::new(hunt_id, hunter_address, proof);
-                    main(params).await?;
+                    VerifyandAwardParams::main(params).await?;
                     Ok(true)
                 } else {
                     Ok(false)
@@ -145,7 +137,7 @@ impl HunterZHunterRpc {
                     // call verifyAndAwardPrize function here
                     let proof = retrieve_json_data("4l_relu_conv_fc.pf")?;
                     let params = VerifyandAwardParams::new(hunt_id, hunter_address, proof);
-                    main(params).await?;
+                    VerifyandAwardParams::main(params).await?;
                     Ok(true)
                 } else {
                     Ok(false)
@@ -283,7 +275,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "the call failed")]
     fn test_request() {
-        let result = request::postData().await;
+        let result = request::postData();
         assert_eq!(result, true);
     }
 

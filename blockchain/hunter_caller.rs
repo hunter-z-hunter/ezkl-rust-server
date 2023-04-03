@@ -9,19 +9,19 @@ use ethers::{
 use eyre::Result;
 use std::{convert::TryFrom, path::Path, sync::Arc, time::Duration};
 
-
+#[derive(Debug, Clone)]
 pub struct VerifyandAwardParams {
-    huntId: &String,
-    winner: &String,
-    proof: &String
+    pub huntId: String,
+    pub winner: String,
+    pub proof: String
 }
 
 impl VerifyandAwardParams {
-    pub fn new(huntId: &String, winner: &String, proof: &String) -> Self {
+    pub fn new(hunt_id: String, winner: String, proof: String) -> Self {
         Self {
-            huntId,
-            winner,
-            proof
+            huntId: hunt_id,
+            winner: winner,
+            proof: proof
         }
     }
 }
@@ -35,7 +35,7 @@ abigen!(
 );
 
 #[tokio::main]
-async fn main(params: VerifyandAwardParams) -> Result<()> {
+pub async fn main(params: VerifyandAwardParams) -> Result<()> {
     use ethers::prelude::*;
     use std::{convert::TryFrom, path::Path, sync::Arc, time::Duration};
 

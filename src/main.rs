@@ -1,10 +1,6 @@
 use dotenv::dotenv;
 use eyre::Result;
-use log::{error, info};
-use rpc_server::run_server;
-mod blockchain;
-use blockchain::hunter_caller::VerifyAndAwardParams;
-
+use crate::run_server;
 
 #[tokio::main]
 async fn main() -> Result<()> {
