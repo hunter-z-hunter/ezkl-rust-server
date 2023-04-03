@@ -20,15 +20,16 @@ use halo2_proofs::{dev::MockProver, poly::commitment::ParamsProver};
 use serde_json::Value;
 use std::{env, error::Error, fs::File, sync::Arc};
 use std::{io::prelude::*, path::PathBuf};
+use blockchain::hunter_caller::VerifyAndAwardParams;
+
 // use request::PostData;
 
 // use crate::request::PostData;
 use crate::request::request;
-use hunter_caller::VerifyandAwardParams;
 pub struct HunterZHunterRpc {}
+use blockchain::hunter_caller::VerifyAndAwardParams;
 
 // pub trait HunterZHunterApiS
-
 #[rpc(server, client)]
 trait HunterZHunterApi {
     #[method(name = "forward")]
@@ -97,11 +98,11 @@ impl HunterZHunterRpc {
             Ok(_) => {
                 info!("mock success");
                 if distance < 0.1 {
-                    Ok(true)
                     // call verifyAndAwardPrize function here
                     let proof = retrieve_json_data("4l_relu_conv_fc.pf")?;
                     let params = VerifyandAwardParams::new(hunt_id, hunter_address, proof);
                     main(params).await?;
+                    Ok(true)
                 } else {
                     Ok(false)
                 }
@@ -110,7 +111,7 @@ impl HunterZHunterRpc {
         }
     }
 
-    async fn submit_proof(&self, input_data: Value, target_output_data: Value, hunt_id: String) -> (Result<bool>, String) {
+    async fn submit_proof(&self, input_data: Value, target_output_data: Value, hunt_id: String, hunter_address: String) -> (Result<bool>, String) {
         let cli = Cli {
             command: Commands::Prove {
                 data: "./data/4l_relu_conv_fc/input.json".to_string(),
@@ -141,11 +142,11 @@ impl HunterZHunterRpc {
             Ok(_) => {
                 info!("mock success");
                 if distance < 0.1 {
-                    Ok(true)
                     // call verifyAndAwardPrize function here
                     let proof = retrieve_json_data("4l_relu_conv_fc.pf")?;
                     let params = VerifyandAwardParams::new(hunt_id, hunter_address, proof);
                     main(params).await?;
+                    Ok(true)
                 } else {
                     Ok(false)
                 }
@@ -288,20 +289,21 @@ mod tests {
 
     #[tokio::test]
     async fn test_verify_and_award() {
-        let input_data = json!({
-            "output_data": [...] // Some sample output_data
+        let hunter_rpc = HunterZHunterRpc::new();
+        let input_data = serde_json::json!({
+            "output_data": [10.0, 9.0, 84.0, 7.0, 6.4, 51.0, 4.0, 3.8, 2.0] // Some sample output_data
         });
-        let target_output_data = json!({
-            "target_output_data": [...] // Some sample target_output_data
+        let target_output_data = serde_json::json!({
+            "target_output_data": [10.0, 9.0, 84.0, 7.0, 6.4, 51.0, 4.0, 3.8, 2.0] // Some sample target_output_data
         });
-        let hunt_id = String::from("sample-hunt-id");
-        let obj = ...; // Create an instance of the struct that implements the `mock` function
+        let hunt_id = String::from("1");
+        let hunter_address = String::from("0xa25347e4fd683dA05C849760b753a4014265254e");
 
-        let result = obj.mock(input_data, target_output_data, hunt_id).await;
+        let result = HunterZHunterRpc::mock(&hunter_rpc, input_data, target_output_data, hunt_id, hunter_address).await;
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), true); // Change this to `false` if you expect the test to fail
     }
 }
 
-}
+
