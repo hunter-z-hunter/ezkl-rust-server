@@ -1,42 +1,20 @@
 use jsonrpsee::{
-    core::{RpcResult as Result, __reexports::serde_json},
-    proc_macros::rpc,
-    tracing::info,
+core::{RpcResult as Result, __reexports::serde_json, async_trait},
+proc_macros::rpc,
+tracing::info,
 };
-
+pub mod blockchain;
+use crate::blockchain::{main, VerifyandAwardParams};
+use crate::request::request;
 use core::panic;
+use ezkl::commands::{Cli, Commands};
 use ezkl::{
-    commands::{Cli, Commands},
-};
-use ezkl::{
-    commands::{RunArgs, StrategyType, TranscriptType},
-    execute::run,
+commands::{RunArgs, StrategyType, TranscriptType},
+execute::run,
 };
 use serde_json::Value;
 use std::{env, fs::File};
 use std::{io::prelude::*, path::PathBuf};
-use crate::blockchain::hunter_caller::{VerifyandAwardParams, main};
-// use request::PostData;
-
-// use crate::request::PostData;
-use crate::request::request;
-pub struct HunterZHunterRpc {}
-// pub trait HunterZHunterApiS
-#[rpc(server, client)]
-trait HunterZHunterApi {
-    #[method(name = "forward")]
-    async fn forward(&self, input_data: Value) -> Result<Value>;
-    #[method(name = "mock")]
-    async fn mock(&self, input_data: Value, target_output_data: Value) -> Result<bool>;
-    #[method(name = "submit_proof")]
-
-    async fn submit_proof(&self, input_data: Value, target_output_data: Value, hunt_id: String) -> Result<bool>;
-    #[method(name = "verify_aggr_proof")]
-    async fn verify_aggr_proof(&self, input_data: Value, target_output_data: Value)
-        -> Result<bool>;
-    // #[method(name = "dummy_proof")]
-    // async fn dummy_proof(&self) -> Result<bool>;
-}
 
 const SERVER_ARGS: RunArgs = RunArgs {
     tolerance: 0_usize,
@@ -48,8 +26,36 @@ const SERVER_ARGS: RunArgs = RunArgs {
     public_params: false,
     max_rotations: 512_usize,
 };
+// pub trait HunterZHunterApiS
+#[async_trait]
+#[rpc(server, client)]
+pub trait HunterZHunterApi {
+    #[method(name = "forward")]
+    async fn forward(&self, input_data: Value) -> Result<Value>;
+    #[method(name = "mock")]
+    async fn mock(&self, input_data: Value, target_output_data: Value) -> Result<bool>;
+    #[method(name = "submit_proof")]
 
-impl HunterZHunterRpc {
+    async fn submit_proof(
+        &self,
+        input_data: Value,
+        target_output_data: Value,
+        hunt_id: String,
+    ) -> Result<bool>;
+    #[method(name = "verify_aggr_proof")]
+    async fn verify_aggr_proof(
+        &self,
+        input_data: Value,
+        target_output_data: Value,
+    ) -> Result<bool>;
+    // #[method(name = "dummy_proof")]
+    // async fn dummy_proof(&self) -> Result<bool>;
+}
+
+pub struct HunterZHunterRpc {}
+
+#[async_trait]
+impl HunterZHunterApi for HunterZHunterRpc {
     async fn forward(&self, input_data: Value) -> Result<Value> {
         let cli = Cli {
             command: Commands::Forward {
@@ -67,7 +73,13 @@ impl HunterZHunterRpc {
         Ok(output)
     }
 
-    async fn mock(&self, input_data: Value, target_output_data: Value, hunt_id: String, hunter_address: String) -> Result<bool> {
+    async fn mock(
+        &self,
+        input_data: Value,
+        target_output_data: Value,
+        hunt_id: String,
+        hunter_address: String,
+    ) -> Result<bool> {
         env::set_var("EZKLCONF", "./data/mock.json");
 
         let cli = Cli {
@@ -103,7 +115,13 @@ impl HunterZHunterRpc {
         }
     }
 
-    async fn submit_proof(&self, input_data: Value, target_output_data: Value, hunt_id: String, hunter_address: String) -> (Result<bool>, String) {
+    async fn submit_proof(
+        &self,
+        input_data: Value,
+        target_output_data: Value,
+        hunt_id: String,
+        hunter_address: String,
+    ) -> (Result<bool>, String) {
         let cli = Cli {
             command: Commands::Prove {
                 data: "./data/4l_relu_conv_fc/input.json".to_string(),
@@ -243,11 +261,11 @@ fn euclidean_distance(a: &Vec<f64>, b: &Vec<f64>) -> f64 {
 }
 
 fn triggerPayment() -> bool {
-        // define params for Ethers rust call
-        // We pass in the huntID, the address of the winner, and the proof here.
-        // let params = VerifyAwardParams::new();
-        // let result = hunter_caller::main(params).unwrap();
-        // println!("contract logs: {:?}", result);
+    // define params for Ethers rust call
+    // We pass in the huntID, the address of the winner, and the proof here.
+    // let params = VerifyAwardParams::new();
+    // let result = hunter_caller::main(params).unwrap();
+    // println!("contract logs: {:?}", result);
     true
 }
 
@@ -291,11 +309,17 @@ mod tests {
         let hunt_id = String::from("1");
         let hunter_address = String::from("0xa25347e4fd683dA05C849760b753a4014265254e");
 
-        let result = HunterZHunterRpc::mock(&hunter_rpc, input_data, target_output_data, hunt_id, hunter_address).await;
+        let result = HunterZHunterRpc::mock(
+            &hunter_rpc,
+            input_data,
+            target_output_data,
+            hunt_id,
+            hunter_address,
+        )
+        .await;
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), true); // Change this to `false` if you expect the test to fail
     }
 }
-
 

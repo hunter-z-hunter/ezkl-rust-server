@@ -1,3 +1,4 @@
+pub mod blockchain;
 pub mod hunter_caller;
 
 pub use hunter_caller::main;

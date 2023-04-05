@@ -3,9 +3,9 @@ use jsonrpsee::server::{ServerBuilder, ServerHandle};
 use std::net::{AddrParseError, SocketAddr};
 use thiserror::Error;
 mod hunter_z_hunter_rpc;
-use hunter_z_hunter_rpc::{HunterZHunterRpc};
+use hunter_z_hunter_rpc::{HunterZHunterRpc, HunterZHunterApiServer};
 pub mod request;
-pub mod blockchain;
+use blockchain::*;
 
 #[derive(Error, Debug)]
 pub enum RpcError {
