@@ -1,7 +1,3 @@
-use reqwest;
-use std::io::prelude::*;
-use thiserror::Error;
-// mod hunter_z_hunter_rpc;
 
 pub mod request {
     // here we'd pass in the proof

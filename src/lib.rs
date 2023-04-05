@@ -5,7 +5,6 @@ use thiserror::Error;
 mod hunter_z_hunter_rpc;
 use hunter_z_hunter_rpc::{HunterZHunterRpc, HunterZHunterApiServer};
 pub mod request;
-use blockchain::*;
 
 #[derive(Error, Debug)]
 pub enum RpcError {

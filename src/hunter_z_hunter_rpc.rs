@@ -3,10 +3,7 @@ core::{RpcResult as Result, __reexports::serde_json, async_trait},
 proc_macros::rpc,
 tracing::info,
 };
-pub mod blockchain;
-use crate::blockchain::{main, VerifyandAwardParams};
-use crate::request::request;
-use core::panic;
+use crate::hunter_caller::{main, VerifyandAwardParams};
 use ezkl::commands::{Cli, Commands};
 use ezkl::{
 commands::{RunArgs, StrategyType, TranscriptType},
@@ -29,22 +26,22 @@ const SERVER_ARGS: RunArgs = RunArgs {
 // pub trait HunterZHunterApiS
 #[async_trait]
 #[rpc(server, client)]
-pub trait HunterZHunterApi {
+pub trait HunterZHunterApi<'a> {
     #[method(name = "forward")]
-    async fn forward(&self, input_data: Value) -> Result<Value>;
+    async fn forward(&'a self, input_data: Value) -> Result<Value>;
     #[method(name = "mock")]
-    async fn mock(&self, input_data: Value, target_output_data: Value) -> Result<bool>;
+    async fn mock(&'a self, input_data: Value, target_output_data: Value) -> Result<bool>;
     #[method(name = "submit_proof")]
 
     async fn submit_proof(
-        &self,
+        &'a self,
         input_data: Value,
         target_output_data: Value,
         hunt_id: String,
     ) -> Result<bool>;
     #[method(name = "verify_aggr_proof")]
     async fn verify_aggr_proof(
-        &self,
+        &'a self,
         input_data: Value,
         target_output_data: Value,
     ) -> Result<bool>;
@@ -55,7 +52,7 @@ pub trait HunterZHunterApi {
 pub struct HunterZHunterRpc {}
 
 #[async_trait]
-impl HunterZHunterApi for HunterZHunterRpc {
+impl<'a> HunterZHunterApi<'a> for HunterZHunterRpc {
     async fn forward(&self, input_data: Value) -> Result<Value> {
         let cli = Cli {
             command: Commands::Forward {
