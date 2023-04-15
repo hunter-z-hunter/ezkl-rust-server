@@ -7,186 +7,95 @@ use jsonrpsee::{
 };
 
 use core::panic;
-use ezkl::{
+use ezkl_lib::{
     commands::{Cli, Commands},
     execute::ExecutionError,
-    pfsys::{prepare_data, prepare_model_circuit_and_public_input},
+    pfsys::{prepare_data},
 };
-use ezkl::{
+use ezkl_lib::{
     commands::{RunArgs, StrategyType, TranscriptType},
     execute::run,
+    circuit::{CheckMode},
 };
 use halo2_proofs::{dev::MockProver, poly::commitment::ParamsProver};
 use serde_json::Value;
-use std::{env, error::Error, fs::File, sync::Arc};
+use std::{env, error::Error, fs::File, sync::{Arc, Mutex}};
 use std::{io::prelude::*, path::PathBuf};
-// use request::PostData;
-
-// use crate::request::PostData;
-use crate::request::request;
+use coins_ledger::transports::Ledger;
 pub struct HunterZHunterRpc {}
 
-// pub trait HunterZHunterApiS
-
-#[rpc(server, client)]
 trait HunterZHunterApi {
     #[method(name = "forward")]
     async fn forward(&self, input_data: Value) -> Result<Value>;
-    #[method(name = "mock")]
-    async fn mock(&self, input_data: Value, target_output_data: Value) -> Result<bool>;
+    // #[method(name = "mock")]
+    // async fn mock(&self, input_data: Value, target_output_data: Value) -> Result<bool>;
     #[method(name = "submit_proof")]
-
-    async fn submit_proof(&self, input_data: Value, target_output_data: Value, hunt_id: String) -> Result<bool>;
-    #[method(name = "verify_aggr_proof")]
-    async fn verify_aggr_proof(&self, input_data: Value, target_output_data: Value)
-        -> Result<bool>;
-    #[method(name = "dummy_proof")]
-    async fn dummy_proof(&self) -> bool;
+    async fn submit_proof(&self, input_data: Value) -> Result<bool>;
+    // #[method(name = "verify_aggr_proof")]
+    // async fn verify_aggr_proof(&self, input_data: Value, target_output_data: Value)
+    //     -> Result<bool>;
 }
+
 
 const SERVER_ARGS: RunArgs = RunArgs {
     tolerance: 0_usize,
-    scale: 4_i32,
-    bits: 10_usize,
-    logrows: 12_u32,
+    scale: 7_u32,
+    bits: 16_usize,
+    logrows: 17_u32,
     public_inputs: false,
     public_outputs: true,
     public_params: false,
-    max_rotations: 512_usize,
+    check_mode: CheckMode::UNSAFE,
+    pack_base: 1_u32,
 };
 
+#[async_trait]
 impl HunterZHunterRpc {
     async fn forward(&self, input_data: Value) -> Result<Value> {
         let cli = Cli {
             command: Commands::Forward {
-                data: "./data/4l_relu_conv_fc/input.json".to_string(),
-                model: "./data/4l_relu_conv_fc/network.onnx".to_string(),
+                data: "./data/eth_tokyo/input.json".to_string(),
+                model: "./data/eth_tokyo/network.onnx".to_string(),
                 output: "output.json".to_string(),
             },
             args: SERVER_ARGS,
         };
+
+        // Wrap Ledger in Arc<Mutex<T>>
+        // let ledger = Arc::new(Mutex::new(Ledger::init().await?));
         env::set_var("EZKLCONF", "./data/forward.json");
         let input_data_str = serde_json::to_string(&input_data)?;
-        store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
+        store_json_data(&input_data_str, "./data/eth_tokyo/input.json").unwrap();
         run(cli).await.unwrap();
         let output = retrieve_json_data("output.json").unwrap();
         Ok(output)
     }
 
-    async fn mock(&self, input_data: Value, target_output_data: Value, hunt_id: String) -> (Result<bool>) {
-        env::set_var("EZKLCONF", "./data/mock.json");
 
-        let cli = Cli {
-            command: Commands::Mock {
-                data: "./data/4l_relu_conv_fc/input.json".to_string(),
-                model: "./data/4l_relu_conv_fc/network.onnx".to_string(),
-            },
-            args: SERVER_ARGS,
-        };
-        let input_data_str = serde_json::to_string(&input_data)?;
-        store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json")?;
-        let output_data = input_data["output_data"].clone();
-        let target_output_data = target_output_data["target_output_data"].clone();
-        let output_data_vec: Vec<Vec<f64>> = serde_json::from_value(output_data)?;
-        let target_output_data_vec: Vec<Vec<f64>> = serde_json::from_value(target_output_data)?;
-        let distance = euclidean_distance(&output_data_vec[0], &target_output_data_vec[0]);
-        let res = run(cli).await;
-        print!("res: {:?}", res);
-        match res {
-            Ok(_) => {
-                info!("mock success");
-                if distance < 0.1 {
-                    self.submit_proof(input_data, target_output_data, hunt_id).await?;
-                    Ok(true)
-                } else {
-                    Ok(false)
-                }
-            }
-            Err(e) => Ok(false),
-        }
-    }
-
-    async fn submit_proof(&self, input_data: Value, target_output_data: Value, hunt_id: String) -> (Result<bool>, String) {
+    async fn submit_proof(&self, input_data: Value) -> Result<bool> {
         let cli = Cli {
             command: Commands::Prove {
-                data: "./data/4l_relu_conv_fc/input.json".to_string(),
-                model: PathBuf::from("./data/4l_relu_conv_fc/network.onnx"),
-                vk_path: PathBuf::from("4l_relu_conv_fc.vk"),
-                proof_path: PathBuf::from("4l_relu_conv_fc.pf"),
+                data: "./data/eth_tokyo/input.json".to_string(),
+                model: PathBuf::from("./data/eth_tokyo/network.onnx"),
+                vk_path: PathBuf::from("/data/eth_tokyo/eth_tokyo.vk"),
+                proof_path: PathBuf::from("/data/eth_tokyo/eth_tokyo.pf"),
                 params_path: PathBuf::from("kzg.params"),
-                transcript: TranscriptType::EVM,
+                transcript: TranscriptType::Blake,
                 strategy: StrategyType::Single,
             },
             args: SERVER_ARGS,
         };
+        
         env::set_var("EZKLCONF", "./data/submit_proof.json");
         let input_data_str = serde_json::to_string(&input_data)?;
-        store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json")?;
+        store_json_data(&input_data_str, "./data/eth_tokyo/input.json")?;
         let output_data = input_data["output_data"].clone();
-        let target_output_data = target_output_data["target_output_data"].clone();
-        let output_data_vec: Vec<Vec<f64>> = serde_json::from_value(output_data)?;
-        let target_output_data_vec: Vec<Vec<f64>> = serde_json::from_value(target_output_data)?;
-        let distance = euclidean_distance(&output_data_vec[0], &target_output_data_vec[0]);
+
 
         let res = run(cli).await;
         print!("res: {:?}", res);
-        match res {
-            Ok(_) => {
-                info!("mock success");
-                if distance < 0.1 {
-                    Ok(true)
-                } else {
-                    Ok(false)
-                }
-            }
-            Err(e) => Ok(false),
-        }
-    }
 
-    async fn verify_aggr_proof(
-        &self,
-        input_data: Value,
-        target_output_data: Value,
-    ) -> Result<bool> {
-        env::set_var("EZKLCONF", "./data/submit_proof.json");
-        let cli = Cli {
-            command: Commands::VerifyAggr {
-                proof_path: PathBuf::from("aggr_2l.pf"),
-                vk_path: PathBuf::from("aggr_2l.vk"),
-                params_path: PathBuf::from("kzg.params"),
-                transcript: TranscriptType::EVM,
-            },
-            args: SERVER_ARGS,
-        };
-        let input_data_str = serde_json::to_string(&input_data)?;
-        store_json_data(&input_data_str, "./data/4l_relu_conv_fc/input.json").unwrap();
-        let output_data = input_data["output_data"].clone();
-        let target_output_data = target_output_data["target_output_data"].clone();
-        let output_data_vec: Vec<Vec<f64>> = serde_json::from_value(output_data).unwrap();
-        let target_output_data_vec: Vec<Vec<f64>> =
-            serde_json::from_value(target_output_data).unwrap();
-        let distance = euclidean_distance(&output_data_vec[0], &target_output_data_vec[0]);
-        let res = run(cli).await;
-        match res {
-            Ok(_) => {
-                info!("Verify success");
-                if distance < 0.1 {
-                    Ok(true)
-                } else {
-                    Ok(false)
-                }
-            }
-            Err(e) => {
-                info!("Verify failed");
-                Ok(false)
-            }
-        }
-    }
-    pub async fn dummy_proof(&self) -> Result<bool> {
-        // call request and create a new hunt struct instance.
-        let result: bool = request::postData().await;
-        Ok(result)
-        // when we add hunt_id to the call, we'll pass it here as well
+        Ok(true)
     }
 }
 
@@ -218,56 +127,4 @@ fn retrieve_json_data(path: &str) -> std::io::Result<Value> {
     let json_data: Value = serde_json::from_str(&contents)?;
 
     Ok(json_data)
-}
-
-// Finding the Euclidian distance between the two output tensors of our machine learning model
-fn euclidean_distance(a: &Vec<f64>, b: &Vec<f64>) -> f64 {
-    // check to make sure that a and b are the same length since the tensors should be the same
-    assert_eq!(
-        a.len(),
-        b.len(),
-        "The lengths of a and b are {} and {}. They should be the same length.",
-        a.len(),
-        b.len()
-    );
-
-    a.iter()
-        .zip(b)
-        .map(|(&x, &y)| (x - y).powi(2))
-        .sum::<f64>()
-        .sqrt()
-}
-
-fn triggerPayment() -> bool {
-        // define params for Ethers rust call
-        // We pass in the huntID, the address of the winner, and the proof here.
-        // let params = VerifyAwardParams::new();
-        // let result = hunter_caller::main(params).unwrap();
-        // println!("contract logs: {:?}", result);
-    true
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_euclidean_distance() {
-        let a: &Vec<f64> = &vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-        let b: &Vec<f64> = &vec![10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0];
-        assert_eq!(euclidean_distance(&a, &b), 18.16590212458495);
-    }
-
-    #[test]
-    #[should_panic(
-        expected = "The lengths of a and b are 10 and 9. They should be the same length."
-    )]
-    fn test_euclidean_distance_different_lengths() {
-        let a: &Vec<f64> = &vec![1.0, 2.0, 3.8, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 110.8];
-        let b: &Vec<f64> = &vec![10.0, 9.0, 84.0, 7.0, 6.4, 51.0, 4.0, 3.8, 2.0];
-        euclidean_distance(&a, &b);
-    }
-
-    #[test]
-    
 }
