@@ -1,11 +1,8 @@
-POST http://0.0.0.0:3030
+POST http://0.0.0.0:3030/submit_proof
 Content-Type: application/json
-timeout: 1000
 
 {
-    "jsonrpc": "2.0",
-    "method": "submit_proof",
-    "params": [{"input_data":[[100,100]],"input_shapes":[[2]],"output_data":[[-0.17382812,0.52,0]]}],
-    "id": 3
+  "input_data": [[108, 108]],
+  "input_shapes": [[2]],
+  "output_data": [[-0.17382812, 0.52, 0]]
 }
-
