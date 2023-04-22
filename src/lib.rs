@@ -14,15 +14,16 @@ use env_logger::Builder;
 pub struct HunterZHunterRpc {}
 
 const SERVER_ARGS: RunArgs = RunArgs {
-    tolerance: 0,
-    scale: 7,
-    bits: 16,
-    logrows: 17,
+    bits: 16_usize,
+    check_mode: CheckMode::SAFE,
+    logrows: 19_u32,
+    pack_base: 2_u32,
     public_inputs: false,
     public_outputs: true,
     public_params: false,
-    check_mode: CheckMode::SAFE,
-    pack_base: 1,
+    scale: 7_u32,
+    tolerance: 0_usize,
+    
 };
 
 fn store_json_data(json_str: &str, path: &str) -> std::io::Result<()> {
@@ -81,8 +82,42 @@ impl HunterZHunterRpc {
                 model: PathBuf::from("./data/eth_tokyo/network.onnx"),
                 vk_path: PathBuf::from("/data/eth_tokyo/eth_tokyo.vk"),
                 proof_path: PathBuf::from("/data/eth_tokyo/eth_tokyo.pf"),
-                params_path: PathBuf::from("kzg.params"),
-                transcript: TranscriptType::Blake,
+                params_path: PathBuf::from("./data/eth_tokyo/kzg.params"),
+                transcript: TranscriptType::EVM,
+                strategy: StrategyType::Single,
+            },
+            args: RunArgs {
+                bits: 16_usize,
+                check_mode: CheckMode::SAFE,
+                logrows: 19_u32,
+                pack_base: 2_u32,
+                public_inputs: true,
+                public_outputs: true,
+                public_params: true,
+                scale: 7_u32,
+                tolerance: 0_usize,
+            },
+        };
+        env::set_var("EZKLCONF", "./data/submit_proof.json");
+        let input_data_str = serde_json::to_string(&input_data).unwrap();
+        store_json_data(&input_data_str, "./data/eth_tokyo/input.json").unwrap();
+        let output_data = input_data["output_data"].clone();
+
+        let res = run(cli).await;
+        print!("res: {:?}", res);
+
+        Ok(true)
+    }
+
+    pub async fn submit_proof_evm(&self, input_data: Value) -> Result<bool, ExecutionError> {
+        let cli = Cli {
+            command: Commands::Prove {
+                data: "./data/eth_tokyo/input.json".to_string(),
+                model: PathBuf::from("./data/eth_tokyo/network.onnx"),
+                vk_path: PathBuf::from("/data/eth_tokyo/eth_tokyo.vk"),
+                proof_path: PathBuf::from("/data/eth_tokyo/eth_tokyo.pf"),
+                params_path: PathBuf::from("./data/eth_tokyo/kzg.params"),
+                transcript: TranscriptType::EVM,
                 strategy: StrategyType::Single,
             },
             args: SERVER_ARGS,
@@ -151,6 +186,7 @@ struct EchoData {
     output_data: Vec<Vec<f32>>,
 }
 
+
 #[post("/forward")]
 async fn forward(input_data: web::Json<EchoData>) -> impl Responder {
 
@@ -190,17 +226,27 @@ async fn submit_proof(input_data: web::Json<EchoData>) -> impl Responder {
             model: PathBuf::from("./data/eth_tokyo/network.onnx"),
             vk_path: PathBuf::from("./data/eth_tokyo/eth_tokyo.vk"),
             proof_path: PathBuf::from("./data/eth_tokyo/eth_tokyo.pf"),
-            params_path: PathBuf::from("kzg.params"),
-            transcript: TranscriptType::Blake,
+            params_path: PathBuf::from("./data/eth_tokyo/kzg.params"),
+            transcript: TranscriptType::EVM,
             strategy: StrategyType::Single,
         },
-        args: SERVER_ARGS,
+        args: RunArgs {
+            pack_base: 2_u32,
+            bits: 16_usize,
+            check_mode: CheckMode::UNSAFE,
+            logrows: 19_u32,
+            public_inputs: true,
+            public_outputs: true,
+            public_params: true,
+            scale: 7_u32,
+            tolerance: 0_usize,
+        },
     };
     info!("1.Cli: {:?}", cli);
 
     env::set_var("EZKLCONF", "./data/submit_proof.json");
-    let input_data_str = serde_json::to_string(&input_data.input_data).unwrap();
-    store_json_data(&input_data_str, "./data/eth_tokyo/input.json").unwrap();
+    let input_data_str = serde_json::to_string(&input_data).unwrap();
+    // store_json_data(&input_data_str, "./data/eth_tokyo/input.json").unwrap();
 
     info!("2.Input_data_str: {:?}", input_data_str);
     let res = run(cli).await;
@@ -213,6 +259,42 @@ async fn submit_proof(input_data: web::Json<EchoData>) -> impl Responder {
     HttpResponse::Ok().json(output)
 }
 
+
+#[post("/mock")]
+async fn mock(input_data: web::Json<EchoData>) -> impl Responder {
+    let cli = Cli {
+        command: Commands::Mock {
+            data: "./data/eth_tokyo/input.json".to_string(),
+            model: "./data/eth_tokyo/network.onnx".to_string(),
+        },
+        args: RunArgs {
+            bits: 16_usize,
+            check_mode: CheckMode::SAFE,
+            logrows: 19_u32,
+            pack_base: 1_u32,
+            public_inputs: true,
+            public_outputs: true,
+            public_params: true,
+            scale: 7_u32,
+            tolerance: 0_usize,
+        },
+    };
+    info!("1.Cli: {:?}", cli);
+
+    env::set_var("EZKLCONF", "./data/submit_proof.json");
+    let input_data_str = serde_json::to_string(&input_data.into_inner()).unwrap();
+    store_json_data(&input_data_str, "./data/eth_tokyo/input.json").unwrap();
+
+    info!("2.Input_data_str: {:?}", input_data_str);
+    let res = run(cli).await;
+
+    info!("3.Res: {:?}", res);
+    let output_str = retrieve_json_data("./data/eth_tokyo/output.json").unwrap();
+    let output: JsonRpcParams = serde_json::from_str(&output_str.to_string()).unwrap();
+    info!("4.Output: {:?}", output);
+
+    HttpResponse::Ok().json(output)
+}
 
 pub async fn run_server() -> std::io::Result<()> {
     let addr = "0.0.0.0:3030";
@@ -232,6 +314,7 @@ pub async fn run_server() -> std::io::Result<()> {
             .app_data(rpc.clone())
             .service(forward)
             .service(submit_proof)
+            .service(mock)
             .service(test)
     })
     .bind(addr)?
