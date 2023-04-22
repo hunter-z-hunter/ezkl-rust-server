@@ -60,8 +60,8 @@ impl HunterZHunterRpc {
 
         let cli = Cli {
             command: Commands::Forward {
-                data: "./data/eth_tokyo/input.json".to_string(),
-                model: "./data/eth_tokyo/network.onnx".to_string(),
+                data: "./data/baby_gaia_2d/input.json".to_string(),
+                model: "./data/baby_gaia_2d/network.onnx".to_string(),
                 output: "output.json".to_string(),
             },
             args: SERVER_ARGS,
@@ -69,7 +69,7 @@ impl HunterZHunterRpc {
 
         env::set_var("EZKLCONF", "./data/forward.json");
         // let input_data_str = serde_json::to_string(&input_data).unwrap();
-        // store_json_data(&input_data_str, "./data/eth_tokyo/input.json").unwrap();
+        // store_json_data(&input_data_str, "./data/baby_gaia_2d/input.json").unwrap();
         // run(cli).await.unwrap();
         let output = retrieve_json_data("output.json").unwrap();
         Ok(output)
@@ -78,11 +78,11 @@ impl HunterZHunterRpc {
     pub async fn submit_proof(&self, input_data: Value) -> Result<bool, ExecutionError> {
         let cli = Cli {
             command: Commands::Prove {
-                data: "./data/eth_tokyo/input.json".to_string(),
-                model: PathBuf::from("./data/eth_tokyo/network.onnx"),
-                vk_path: PathBuf::from("/data/eth_tokyo/eth_tokyo.vk"),
-                proof_path: PathBuf::from("/data/eth_tokyo/eth_tokyo.pf"),
-                params_path: PathBuf::from("./data/eth_tokyo/kzg.params"),
+                data: "./data/baby_gaia_2d/input.json".to_string(),
+                model: PathBuf::from("./data/baby_gaia_2d/network.onnx"),
+                vk_path: PathBuf::from("/data/baby_gaia_2d/baby_gaia_2d.vk"),
+                proof_path: PathBuf::from("/data/baby_gaia_2d/baby_gaia_2d.pf"),
+                params_path: PathBuf::from("./data/baby_gaia_2d/kzg.params"),
                 transcript: TranscriptType::EVM,
                 strategy: StrategyType::Single,
             },
@@ -98,9 +98,9 @@ impl HunterZHunterRpc {
                 tolerance: 0_usize,
             },
         };
-        env::set_var("EZKLCONF", "./data/submit_proof.json");
+        env::set_var("EZKLCONF", "./data/baby_gaia_2d/mock_baby_gaia.json");
         let input_data_str = serde_json::to_string(&input_data).unwrap();
-        store_json_data(&input_data_str, "./data/eth_tokyo/input.json").unwrap();
+        store_json_data(&input_data_str, "./data/baby_gaia_2d/input.json").unwrap();
         let output_data = input_data["output_data"].clone();
 
         let res = run(cli).await;
@@ -112,19 +112,19 @@ impl HunterZHunterRpc {
     pub async fn submit_proof_evm(&self, input_data: Value) -> Result<bool, ExecutionError> {
         let cli = Cli {
             command: Commands::Prove {
-                data: "./data/eth_tokyo/input.json".to_string(),
-                model: PathBuf::from("./data/eth_tokyo/network.onnx"),
-                vk_path: PathBuf::from("/data/eth_tokyo/eth_tokyo.vk"),
-                proof_path: PathBuf::from("/data/eth_tokyo/eth_tokyo.pf"),
-                params_path: PathBuf::from("./data/eth_tokyo/kzg.params"),
+                data: "./data/baby_gaia_2d/input.json".to_string(),
+                model: PathBuf::from("./data/baby_gaia_2d/network.onnx"),
+                vk_path: PathBuf::from("/data/baby_gaia_2d/baby_gaia_2d.vk"),
+                proof_path: PathBuf::from("/data/baby_gaia_2d/baby_gaia_2d.pf"),
+                params_path: PathBuf::from("kzg.params"),
                 transcript: TranscriptType::EVM,
                 strategy: StrategyType::Single,
             },
             args: SERVER_ARGS,
         };
-        env::set_var("EZKLCONF", "./data/submit_proof.json");
+        env::set_var("EZKLCONF", "./data/baby_gaia_2d/prove_baby_gaia.json");
         let input_data_str = serde_json::to_string(&input_data).unwrap();
-        store_json_data(&input_data_str, "./data/eth_tokyo/input.json").unwrap();
+        store_json_data(&input_data_str, "./data/baby_gaia_2d/input.json").unwrap();
         let output_data = input_data["output_data"].clone();
 
         let res = run(cli).await;
@@ -156,8 +156,8 @@ async fn test() -> impl Responder {
     // Modify the Cli struct with input variables
     let cli = Cli {
         command: Commands::Forward {
-            data: "./data/eth_tokyo/input.json".to_string(),
-            model: "./data/eth_tokyo/network.onnx".to_string(),
+            data: "./data/baby_gaia_2d/input.json".to_string(),
+            model: "./data/baby_gaia_2d/network.onnx".to_string(),
             output: "output.json".to_string(),
         },
         args: SERVER_ARGS,
@@ -167,7 +167,7 @@ async fn test() -> impl Responder {
 
     env::set_var("EZKLCONF", "./data/forward.json");
     // let input_data_str = serde_json::to_string(&input_data)?;
-    // store_json_data(&input_data_str, "./data/eth_tokyo/input.json").unwrap();
+    // store_json_data(&input_data_str, "./data/baby_gaia_2d/input.json").unwrap();
     run(cli).await.unwrap();
     let output_str = retrieve_json_data("output.json").unwrap();
     let output: JsonRpcParams = serde_json::from_str(&output_str.to_string()).unwrap();
@@ -192,9 +192,9 @@ async fn forward(input_data: web::Json<EchoData>) -> impl Responder {
 
     let cli = Cli {
         command: Commands::Forward {
-            data: "./data/eth_tokyo/input.json".to_string(),
-            model: "./data/eth_tokyo/network.onnx".to_string(),
-            output: "./data/eth_tokyo/output.json".to_string(),
+            data: "./data/baby_gaia_2d/input.json".to_string(),
+            model: "./data/baby_gaia_2d/network.onnx".to_string(),
+            output: "./data/baby_gaia_2d/output.json".to_string(),
         },
         args: SERVER_ARGS,
     };
@@ -206,10 +206,10 @@ async fn forward(input_data: web::Json<EchoData>) -> impl Responder {
 
     info!("input_data_str: {:?}", input_data_str);
 
-    store_json_data(&input_data_str, "./data/eth_tokyo/input.json").unwrap();
+    store_json_data(&input_data_str, "./data/baby_gaia_2d/input.json").unwrap();
 
     run(cli).await.unwrap();
-    let output_str = retrieve_json_data("./data/eth_tokyo/output.json").unwrap();
+    let output_str = retrieve_json_data("./data/baby_gaia_2d/output.json").unwrap();
     let output: JsonRpcParams = serde_json::from_str(&output_str.to_string()).unwrap();
     info!("Output: {:?}", output);
 
@@ -222,11 +222,11 @@ async fn forward(input_data: web::Json<EchoData>) -> impl Responder {
 async fn submit_proof(input_data: web::Json<EchoData>) -> impl Responder {
     let cli = Cli {
         command: Commands::Prove {
-            data: "./data/eth_tokyo/input.json".to_string(),
-            model: PathBuf::from("./data/eth_tokyo/network.onnx"),
-            vk_path: PathBuf::from("./data/eth_tokyo/eth_tokyo.vk"),
-            proof_path: PathBuf::from("./data/eth_tokyo/eth_tokyo.pf"),
-            params_path: PathBuf::from("./data/eth_tokyo/kzg.params20"),
+            data: "./data/baby_gaia_2d/input.json".to_string(),
+            model: PathBuf::from("./data/baby_gaia_2d/network.onnx"),
+            vk_path: PathBuf::from("./data/baby_gaia_2d/baby_gaia_2d.vk"),
+            proof_path: PathBuf::from("./data/baby_gaia_2d/baby_gaia_2d.pf"),
+            params_path: PathBuf::from("kzg.params"),
             transcript: TranscriptType::EVM,
             strategy: StrategyType::Single,
         },
@@ -234,7 +234,7 @@ async fn submit_proof(input_data: web::Json<EchoData>) -> impl Responder {
             pack_base: 1_u32,
             bits: 16_usize,
             check_mode: CheckMode::UNSAFE,
-            logrows: 20_u32,
+            logrows: 19_u32,
             public_inputs: false,
             public_outputs: true,
             public_params: false,
@@ -244,15 +244,15 @@ async fn submit_proof(input_data: web::Json<EchoData>) -> impl Responder {
     };
     info!("1.Cli: {:?}", cli);
 
-    env::set_var("EZKLCONF", "./data/eth_tokyo/env_submit_proof.json");
+    env::set_var("EZKLCONF", "./data/baby_gaia_2d/prove_baby_gaia.json");
     let input_data_str = serde_json::to_string(&input_data).unwrap();
-    store_json_data(&input_data_str, "./data/eth_tokyo/input.json").unwrap();
+    store_json_data(&input_data_str, "./data/baby_gaia_2d/input.json").unwrap();
 
     info!("2.Input_data_str: {:?}", input_data_str);
     let res = run(cli).await;
 
     info!("3.Res: {:?}", res);
-    let output_str = retrieve_json_data("./data/eth_tokyo/output.json").unwrap();
+    let output_str = retrieve_json_data("./data/baby_gaia_2d/output.json").unwrap();
     let output: JsonRpcParams = serde_json::from_str(&output_str.to_string()).unwrap();
     info!("4.Output: {:?}", output);
 
@@ -264,13 +264,13 @@ async fn submit_proof(input_data: web::Json<EchoData>) -> impl Responder {
 async fn mock(input_data: web::Json<EchoData>) -> impl Responder {
     let cli = Cli {
         command: Commands::Mock {
-            data: "./data/eth_tokyo/input.json".to_string(),
-            model: "./data/eth_tokyo/network.onnx".to_string(),
+            data: "./data/baby_gaia_2d/input.json".to_string(),
+            model: "./data/baby_gaia_2d/network.onnx".to_string(),
         },
         args: RunArgs {
             bits: 16_usize,
             check_mode: CheckMode::SAFE,
-            logrows: 20_u32,
+            logrows: 19_u32,
             pack_base: 1_u32,
             public_inputs: false,
             public_outputs: true,
@@ -281,15 +281,15 @@ async fn mock(input_data: web::Json<EchoData>) -> impl Responder {
     };
     info!("1.Cli: {:?}", cli);
 
-    env::set_var("EZKLCONF", "./data/eth_tokyo/env_mock.json");
+    env::set_var("EZKLCONF", "./data/baby_gaia_2d/mock_baby_gaia.json");
     let input_data_str = serde_json::to_string(&input_data.into_inner()).unwrap();
-    store_json_data(&input_data_str, "./data/eth_tokyo/input.json").unwrap();
+    store_json_data(&input_data_str, "./data/baby_gaia_2d/input.json").unwrap();
 
     info!("2.Input_data_str: {:?}", input_data_str);
     let res = run(cli).await;
 
     info!("3.Res: {:?}", res);
-    let output_str = retrieve_json_data("./data/eth_tokyo/output.json").unwrap();
+    let output_str = retrieve_json_data("./data/baby_gaia_2d/output.json").unwrap();
     let output: JsonRpcParams = serde_json::from_str(&output_str.to_string()).unwrap();
     info!("4.Output: {:?}", output);
 

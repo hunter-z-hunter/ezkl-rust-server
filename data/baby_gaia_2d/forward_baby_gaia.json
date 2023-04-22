@@ -1,0 +1,11 @@
+{"command":{"Forward":{"data":"./data/baby_gaia_2d/input.json","model":"./data/baby_gaia_2d/network.onnx","output":"./data/baby_gaia_2d/output.json"}},"args": {
+    "bits": 16,
+    "check_mode": "SAFE",
+    "logrows": 17,
+    "pack_base": 1,
+    "public_inputs": false,
+    "public_outputs": true,
+    "public_params": false,
+    "scale": 7,
+    "tolerance": 0
+}}
