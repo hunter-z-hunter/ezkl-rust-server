@@ -1,0 +1,19 @@
+{
+    "command": {
+      "Mock": {
+        "data": "./data/eth_tokyo/input.json",
+        "model": "./data/eth_tokyo/network.onnx"
+      }
+    },
+    "args": {
+      "tolerance": 0,
+      "scale": 7,
+      "bits": 16,
+      "logrows": 20,
+      "public_inputs": false,
+      "public_outputs": true,
+      "public_params": false,
+      "pack_base": 1,
+      "check_mode": "SAFE"
+    }
+  }

@@ -226,27 +226,27 @@ async fn submit_proof(input_data: web::Json<EchoData>) -> impl Responder {
             model: PathBuf::from("./data/eth_tokyo/network.onnx"),
             vk_path: PathBuf::from("./data/eth_tokyo/eth_tokyo.vk"),
             proof_path: PathBuf::from("./data/eth_tokyo/eth_tokyo.pf"),
-            params_path: PathBuf::from("./data/eth_tokyo/kzg.params"),
+            params_path: PathBuf::from("./data/eth_tokyo/kzg.params20"),
             transcript: TranscriptType::EVM,
             strategy: StrategyType::Single,
         },
         args: RunArgs {
-            pack_base: 2_u32,
+            pack_base: 1_u32,
             bits: 16_usize,
             check_mode: CheckMode::UNSAFE,
-            logrows: 19_u32,
-            public_inputs: true,
+            logrows: 20_u32,
+            public_inputs: false,
             public_outputs: true,
-            public_params: true,
+            public_params: false,
             scale: 7_u32,
             tolerance: 0_usize,
         },
     };
     info!("1.Cli: {:?}", cli);
 
-    env::set_var("EZKLCONF", "./data/submit_proof.json");
+    env::set_var("EZKLCONF", "./data/eth_tokyo/env_submit_proof.json");
     let input_data_str = serde_json::to_string(&input_data).unwrap();
-    // store_json_data(&input_data_str, "./data/eth_tokyo/input.json").unwrap();
+    store_json_data(&input_data_str, "./data/eth_tokyo/input.json").unwrap();
 
     info!("2.Input_data_str: {:?}", input_data_str);
     let res = run(cli).await;
@@ -270,18 +270,18 @@ async fn mock(input_data: web::Json<EchoData>) -> impl Responder {
         args: RunArgs {
             bits: 16_usize,
             check_mode: CheckMode::SAFE,
-            logrows: 19_u32,
+            logrows: 20_u32,
             pack_base: 1_u32,
-            public_inputs: true,
+            public_inputs: false,
             public_outputs: true,
-            public_params: true,
+            public_params: false,
             scale: 7_u32,
             tolerance: 0_usize,
         },
     };
     info!("1.Cli: {:?}", cli);
 
-    env::set_var("EZKLCONF", "./data/submit_proof.json");
+    env::set_var("EZKLCONF", "./data/eth_tokyo/env_mock.json");
     let input_data_str = serde_json::to_string(&input_data.into_inner()).unwrap();
     store_json_data(&input_data_str, "./data/eth_tokyo/input.json").unwrap();
 

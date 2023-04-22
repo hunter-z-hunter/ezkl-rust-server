@@ -2188,7 +2188,7 @@ dependencies = [
 [[package]]
 name = "ezkl-lib"
 version = "0.1.0"
-source = "git+https://github.com/zkonduit/ezkl.git?branch=main#b5e05d3ff8e63523b7141ff594804dd3633f8dee"
+source = "git+https://github.com/danilowhk/ezkl?branch=main#8abd467b0dc0ebdb3c11dac2ca59550b0356d0ba"
 dependencies = [
  "anyhow",
  "bincode",
