@@ -7,13 +7,14 @@
     },
     "args": {
       "bits": 16,
-      "check_mode": "SAFE",
+      "check_mode": "UNSAFE",
       "logrows": 17,
       "pack_base": 1,
       "public_inputs": false,
       "public_outputs": true,
       "public_params": false,
       "scale": 7,
-      "tolerance": 0
+      "tolerance": 0,
+      "allocated_constraints": "None"
   }
   }

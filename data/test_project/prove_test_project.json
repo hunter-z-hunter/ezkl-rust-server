@@ -1,10 +1,10 @@
 {
     "command": {
       "Prove": {
-        "data": "./data/baby_gaia_2d/input.json",
-        "model": "./data/baby_gaia_2d/network.onnx",
-        "vk_path": "./data/baby_gaia_2d/baby_gaia_2d.vk",
-        "proof_path": "./data/baby_gaia_2d/baby_gaia_2d.pf",
+        "data": "./data/test_project/input.json",
+        "model": "./data/test_project/network.onnx",
+        "vk_path": "./data/test_project/test_project.vk",
+        "proof_path": "./data/test_project/test_project.pf",
         "params_path": "kzg.params",
         "transcript": "EVM",
         "strategy": "Single"
@@ -19,7 +19,6 @@
         "public_outputs": true,
         "public_params": false,
         "scale": 7,
-        "tolerance": 0,
-        "allocated_constraints": "None"
-    }
+        "tolerance": 0    
+      }
   }

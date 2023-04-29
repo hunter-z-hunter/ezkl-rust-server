@@ -1,0 +1,23 @@
+{
+    "command": {
+      "CreateEVMVerifier": {
+        "data": "./data/test_project/input.json",
+        "model": "./data/test_project/network.onnx",
+        "params_path": "kzg.params",
+        "vk_path": "./data/test_project/test_project.vk",
+        "deployment_code_path": "./data/test_project/test_project.code",
+        "sol_code_path": "./data/test_project/test_project.sol"
+      }
+    },
+    "args": {
+        "bits": 16,
+        "check_mode": "UNSAFE",
+        "logrows": 17,
+        "pack_base": 1,
+        "public_inputs": false,
+        "public_outputs": true,
+        "public_params": false,
+        "scale": 7,
+        "tolerance": 0    
+      }
+  }
