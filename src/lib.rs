@@ -455,7 +455,7 @@ async fn prove(data: web::Json<CreateEvmContractData>) -> impl Responder {
 }
 
 pub async fn run_server() -> std::io::Result<()> {
-    let addr = "0.0.0.0:8080";
+    let addr = format!("0.0.0.0:{}", std::env::var("PORT").unwrap_or_else(|_| String::from("8080")));
     let rpc = web::Data::new(EzklServer {});
 
     // Initialize the logger
