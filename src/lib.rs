@@ -443,11 +443,11 @@ async fn prove(data: web::Json<CreateEvmContractData>) -> impl Responder {
     info!("2.1 Input_data_str: {:?}", input_data_str);
     let res = run(cli_prove).await;
     // info!("3.1 Res: {:?}", res);
-    let input_json_path = format!("{}/output.json", base_path);
-    let output_str = retrieve_json_data(&input_json_path).unwrap();
-    let output: JsonRpcParams = serde_json::from_str(&output_str.to_string()).unwrap();
-    info!("4.Output: {:?}", output);
-
+    // let input_json_path = format!("{}/output.json", base_path);
+    // let output_str = retrieve_json_data(&input_json_path).unwrap();
+    // let output: JsonRpcParams = serde_json::from_str(&output_str.to_string()).unwrap();
+    // info!("4.Output: {:?}", output);
+    let output = format!("{:?}", res);
     let proof_data = retrieve_proof_data(&proof_path).unwrap();
     info!("5.Proof Data: {:?}", proof_data);
 
@@ -473,6 +473,7 @@ pub async fn run_server() -> std::io::Result<()> {
             .service(submit_proof)
             .service(mock)
             .service(generate_evm_contract)
+            .service(prove)
     })
     .bind(addr)?
     .run()
