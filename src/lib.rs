@@ -456,7 +456,7 @@ async fn prove(data: web::Json<CreateEvmContractData>) -> impl Responder {
 
 
 pub async fn run_server() -> std::io::Result<()> {
-    let addr = "0.0.0.0:3030";
+    let addr = "0.0.0.0:8080";
     let rpc = web::Data::new(EzklServer {});
 
     // Initialize the logger
@@ -464,7 +464,7 @@ pub async fn run_server() -> std::io::Result<()> {
 
     // Your server initialization code here
 
-    info!("Server started on http://0.0.0.0:3030");
+    info!("Server started on http://0.0.0.0:8080");
 
     HttpServer::new(move || {
         App::new()
