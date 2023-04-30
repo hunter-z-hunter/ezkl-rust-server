@@ -408,29 +408,6 @@ async fn prove(data: web::Json<CreateEvmContractData>) -> impl Responder {
         },
     };
 
-    let cli = Cli {
-        command: Commands::CreateEVMVerifier {
-            data: input_json_path.clone(),
-            model: PathBuf::from(network_onnx_path.clone()),
-            vk_path: PathBuf::from(vk_path.clone()),
-            deployment_code_path: Some(PathBuf::from(deployment_code_path.clone())),
-            params_path: PathBuf::from("kzg.params"),
-            sol_code_path: Some(PathBuf::from(sol_code_path.clone())),
-        },
-        args: RunArgs {
-            pack_base: 1_u32,
-            bits: 16_usize,
-            check_mode: CheckMode::UNSAFE,
-            logrows: 17_u32,
-            public_inputs: false,
-            public_outputs: true,
-            public_params: false,
-            scale: 7_u32,
-            tolerance: 0_usize,
-            allocated_constraints: None,
-        },
-    };
-
     info!("1.1 Cli: {:?}", cli_prove);
 
     // env::set_var("EZKLCONF", evm_config_path);
@@ -455,7 +432,10 @@ async fn prove(data: web::Json<CreateEvmContractData>) -> impl Responder {
 }
 
 pub async fn run_server() -> std::io::Result<()> {
-    let addr = format!("0.0.0.0:{}", std::env::var("PORT").unwrap_or_else(|_| String::from("8080")));
+    let addr = format!(
+        "0.0.0.0:{}",
+        std::env::var("PORT").unwrap_or_else(|_| String::from("8080"))
+    );
     let rpc = web::Data::new(EzklServer {});
 
     // Initialize the logger
