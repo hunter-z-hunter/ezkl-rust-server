@@ -7,7 +7,6 @@ edition = "2021"
 
 [dependencies]
 # rpc
-jsonrpsee = { version = "^0.16", features = ["full"] }
 eyre = "0.6.5"
 thiserror = "1.0.26"
 dotenv = "0.15.0"
