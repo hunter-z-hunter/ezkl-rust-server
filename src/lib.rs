@@ -454,7 +454,6 @@ async fn prove(data: web::Json<CreateEvmContractData>) -> impl Responder {
     HttpResponse::Ok().json((output, proof_data))
 }
 
-
 pub async fn run_server() -> std::io::Result<()> {
     let addr = "0.0.0.0:8080";
     let rpc = web::Data::new(EzklServer {});
