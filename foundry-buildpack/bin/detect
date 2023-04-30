@@ -1,4 +1,0 @@
-!/bin/sh
-
-echo "Foundry buildpack"
-exit 0
