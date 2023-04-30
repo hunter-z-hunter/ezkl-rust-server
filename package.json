@@ -1,0 +1,8 @@
+{
+    "name": "ezkl-framework-server",
+    "version": "0.0.1",
+    "description": "My Heroku app",
+    "dependencies": {
+      "solc": "^0.8.9"
+    }
+  }
